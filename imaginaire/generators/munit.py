@@ -156,6 +156,84 @@ class Generator(nn.Module):
         return output_images, file_names
 
 
+    def inference2(self, data, style_mean, a2b=True, random_style=True):
+        r"""MUNIT inference.
+
+        Args:
+            data (dict): Training data at the current iteration.
+              - images_a (tensor): Images from domain A.
+              - images_b (tensor): Images from domain B.
+            a2b (bool): If ``True``, translates images from domain A to B,
+                otherwise from B to A.
+            random_style (bool): If ``True``, samples the style code from the
+                prior distribution, otherwise uses the style code encoded from
+                the input images in the other domain.
+        """
+        if a2b:
+            input_key = 'images_a'
+            content_encode = self.autoencoder_a.content_encoder
+            style_encode = self.autoencoder_b.style_encoder
+            decode = self.autoencoder_b.decode
+        else:
+            input_key = 'images_b'
+            content_encode = self.autoencoder_b.content_encoder
+            style_encode = self.autoencoder_a.style_encoder
+            decode = self.autoencoder_a.decode
+
+        content_images = data[input_key]
+        content = content_encode(content_images)
+        if random_style:
+            style_channels = self.autoencoder_a.style_channels
+            style = style_mean
+                                
+            #print(f'data: {data}') 
+            #print(f'style: {style}')                    
+            file_names = data['key'][input_key]['filename']
+            #print(f'file_names: {file_names}')  
+        else:
+            style_key = 'images_b' if a2b else 'images_a'
+            assert style_key in data.keys(), \
+                "{} must be provided when 'random_style' " \
+                "is set to False".format(style_key)
+            style_images = data[style_key]
+            style = style_encode(style_images)
+            file_names = \
+                [content_name + '_style_' + style_name
+                 for content_name, style_name in
+                    zip(data['key'][input_key]['filename'],
+                        data['key'][style_key]['filename'])]
+
+        output_images = decode(content, style)
+        return output_images, file_names
+        
+
+    def get_style_code(self, data, a2b=True, random_style=True):
+        if a2b:
+            input_key = 'images_a'
+            style_encode = self.autoencoder_b.style_encoder
+        else:
+            input_key = 'images_b'
+            style_encode = self.autoencoder_a.style_encoder
+
+        content_images = data[input_key]
+        
+        if True:
+            style_key = 'images_b' if a2b else 'images_a'
+            assert style_key in data.keys(), \
+                "{} must be provided when 'random_style' " \
+                "is set to False".format(style_key)
+            style_images = data[style_key]
+            style = style_encode(style_images)
+            
+            file_names = data['key'][input_key]['filename']
+            
+            #print(f'data: {data}') 
+            #print(f'style: {style}')
+            #print(f'file_names: {file_names}')
+            
+        return style, file_names
+        
+
 class AutoEncoder(nn.Module):
     r"""Improved MUNIT autoencoder.
 
