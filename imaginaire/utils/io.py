@@ -71,6 +71,7 @@ def download_file(URL, destination):
     session = requests.Session()
     response = session.get(URL, stream=True)
     token = get_confirm_token(response)
+    token = 't' # temporary solution
     if token:
         params = {'confirm': token}
         response = session.get(URL, params=params, stream=True)
