@@ -835,9 +835,35 @@ class BaseTrainer(object):
         else:
             net_G = self.net_G.module
         net_G.eval()
+
+        print('# of samples %d' % len(data_loader))
+        for it, data in enumerate(tqdm(data_loader)):
+            data = self.start_of_iteration(data, current_iteration=-1)
+            with torch.no_grad():
+                output_images, file_names = \
+                    net_G.inference(data, **vars(inference_args))
+            for output_image, file_name in zip(output_images, file_names):
+                fullname = os.path.join(output_dir, file_name + '.jpg')
+                output_image = tensor2pilimage(output_image.clamp_(-1, 1),
+                                               minus1to1_normalized=True)
+                save_pilimage_in_jpeg(fullname, output_image)
+
+    def test_style(self, data_loader, output_dir, munit_style, inference_args):
+        r"""Compute results images for a batch of input data and save the
+        results in the specified folder.
+
+        Args:
+            data_loader (torch.utils.data.DataLoader): PyTorch dataloader.
+            output_dir (str): Target location for saving the output image.
+        """
+        if self.cfg.trainer.model_average_config.enabled:
+            net_G = self.net_G.module.averaged_model
+        else:
+            net_G = self.net_G.module
+        net_G.eval()
         
         
-        
+        debugging = True                
         print('# of samples for getting style code %d' % len(data_loader))
         style_list = []
         name_list = []
@@ -846,6 +872,7 @@ class BaseTrainer(object):
             data = self.start_of_iteration(data, current_iteration=-1)
             with torch.no_grad():
                 style, file_names = net_G.get_style_code(data, **vars(inference_args))
+                
                 style_list.append(style)
                 name_list += file_names
                 if is_first:
@@ -853,18 +880,22 @@ class BaseTrainer(object):
                     is_first = False
                 else:
                     styles = torch.cat((styles, style), dim=3)
-                print(f'style: {style}')
-                print(f'file_names: {file_names}')
-                print(f'styles: {styles}')
-                print(f'styles.size(): {styles.size()}')
+                
+                if debugging:
+                    print(f'style: {style}')
+                    print(f'file_names: {file_names}')
+                    print(f'styles: {styles}')
+                    print(f'styles.size(): {styles.size()}')
+                    
         style_mean = styles.mean(dim=3, keepdim=True) #or std_mean
-        print(f'style_mean: {style_mean}')
-        print(f'style_mean.size(): {style_mean.size()}')
+        if debugging:
+            print(f'style_mean: {style_mean}')
+            print(f'style_mean.size(): {style_mean.size()}')
+            print(f'len(style_list): {len(style_list)}')
+            print(f'len(name_list): {len(name_list)}')  
         
         max_dist = -1000000
-        min_dist = 1000000
-        print(f'len(style_list): {len(style_list)}')
-        print(f'len(name_list): {len(name_list)}')        
+        min_dist = 1000000      
         for style, file_name in zip(style_list, name_list):
             dist = (style - style_mean).pow(2).sum(1).sqrt()
             #euclidena_dist = sum(((a - b)**2).reshape(8))
@@ -878,25 +909,33 @@ class BaseTrainer(object):
                 max_style = style
                 max_filename = file_name
                 
-        print(f'min_dist: {min_dist}')
-        print(f'min_filename: {min_filename}')
-        print(f'min_style: {min_style}')
-        print(f'max_dist: {max_dist}')
-        print(f'max_filename: {max_filename}')
-        print(f'max_style: {max_style}')
+        if debugging:
+            print(f'min_dist: {min_dist}')
+            print(f'min_filename: {min_filename}')
+            print(f'min_style: {min_style}')
+            print(f'max_dist: {max_dist}')
+            print(f'max_filename: {max_filename}')
+            print(f'max_style: {max_style}')
         
-        
-            #for sty, file_name in zip(style, file_names):                
-                #save_pilimage_in_jpeg(fullname, output_image)
-        
-        
+        style_tensor = style_mean
+        if munit_style == 'max':
+            style_tensor = max_style        
+        elif munit_style == 'min':
+            style_tensor = min_style
+        elif munit_style == 'mean':
+            style_tensor = style_mean
+        elif munit_style == 'random':
+            style_tensor = 'random'
+        else:
+            print("Wrong choice!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!, please check your option for munit style!!")
+                   
 
         print('# of samples %d' % len(data_loader))
         for it, data in enumerate(tqdm(data_loader)):
             data = self.start_of_iteration(data, current_iteration=-1)
             with torch.no_grad():
                 output_images, file_names = \
-                    net_G.inference2(data, style_mean, **vars(inference_args))
+                    net_G.inference_style(data, style_tensor, **vars(inference_args))
             for output_image, file_name in zip(output_images, file_names):
                 fullname = os.path.join(output_dir, file_name + '.jpg')
                 output_image = tensor2pilimage(output_image.clamp_(-1, 1),
