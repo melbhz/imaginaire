@@ -156,7 +156,7 @@ class Generator(nn.Module):
         return output_images, file_names
 
 
-    def inference2(self, data, style_mean, a2b=True, random_style=True):
+    def inference_style(self, data, style_tensor, a2b=True, random_style=True):
         r"""MUNIT inference.
 
         Args:
@@ -181,14 +181,21 @@ class Generator(nn.Module):
             decode = self.autoencoder_a.decode
 
         content_images = data[input_key]
-        content = content_encode(content_images)
+        content = content_encode(content_images)        
         if random_style:
-            style_channels = self.autoencoder_a.style_channels
-            style = style_mean
+            if style_tensor == 'random':
+                style_channels = self.autoencoder_a.style_channels
+                style = torch.randn(content.size(0), style_channels, 1, 1,
+                                    device=torch.device('cuda'))
+                file_names = data['key'][input_key]['filename']
+            elif style_tensor == '':
+                print("Style tensor required!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!, please check your option for munit style!!")
+            else :
+                style = style_tensor
+                file_names = data['key'][input_key]['filename']
                                 
             #print(f'data: {data}') 
-            #print(f'style: {style}')                    
-            file_names = data['key'][input_key]['filename']
+            #print(f'style: {style}')
             #print(f'file_names: {file_names}')  
         else:
             style_key = 'images_b' if a2b else 'images_a'
