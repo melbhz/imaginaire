@@ -863,42 +863,46 @@ class BaseTrainer(object):
         net_G.eval()
         
         
-        debugging = True                
+        #print(f"inference_args: {inference_args}\n type(inference_args): {type(inference_args)}\n dict(inference_args): {dict(inference_args)}")
+        dict_inference_args = dict(inference_args)
+        print(f"dict_inference_args: {dict_inference_args}") #if dict_inference_args['a2b']:
+
+        debugging = False #True
         print('# of samples for getting style code %d' % len(data_loader))
+        style_dict = {}
         style_list = []
         name_list = []
-        is_first = True
         for it, data in enumerate(tqdm(data_loader)):
             data = self.start_of_iteration(data, current_iteration=-1)
             with torch.no_grad():
-                style, file_names = net_G.get_style_code(data, **vars(inference_args))
-                
-                style_list.append(style)
-                name_list += file_names
-                if is_first:
-                    styles = style
-                    is_first = False
-                else:
-                    styles = torch.cat((styles, style), dim=3)
-                
-                if debugging:
-                    #print(f'data: {data}')
-                    print(f'style: {style}')
-                    print(f'file_names: {file_names}')
-                    print(f'styles: {styles}')
-                    print(f'styles.size(): {styles.size()}')
+                style_tensors, style_filenames, style_dirname = net_G.get_style_code(data, **vars(inference_args))                
+                for st, fn in zip(style_tensors, style_filenames):
+                    if fn not in style_dict:
+                        style_dict[fn] = st                        
+                        style_list.append(st)
+                        name_list.append(fn)                        
+                        if debugging:
+                            print(f'st: {st}')
+                            print(f'fn: {fn}')
+                            #print(f"data: {data}")
                     
-        style_mean = styles.mean(dim=3, keepdim=True) #or std_mean
+        styles = torch.cat([x.unsqueeze(0) for x in style_list], 0)
+        style_mean = styles.mean(dim=0, keepdim=True) #or std_mean
         if debugging:
+            print(f'styles: {styles}')
+            print(f'styles.size(): {styles.size()}')
             print(f'style_mean: {style_mean}')
             print(f'style_mean.size(): {style_mean.size()}')
             print(f'len(style_list): {len(style_list)}')
-            print(f'len(name_list): {len(name_list)}')  
+            print(f'len(name_list):  {len(name_list)}')
+            print(f'len(style_dict): {len(style_dict)}')
         
         max_dist = -1000000
         min_dist = 1000000      
-        for style, file_name in zip(style_list, name_list):
+        for file_name, style in style_dict.items(): #zip(style_list, name_list):
+            style = style.unsqueeze(0)
             dist = (style - style_mean).pow(2).sum(1).sqrt()
+            print(f'file_name: {file_name}\n style.size(): {style.size()}')
             #euclidena_dist = sum(((a - b)**2).reshape(8))
             if min_dist > dist:
                 min_dist = dist
@@ -910,7 +914,10 @@ class BaseTrainer(object):
                 max_style = style
                 max_filename = file_name
                 
+        min_filename = style_dirname + '/' + min_filename + '.jpg'
+        max_filename = style_dirname + '/' + max_filename + '.jpg'
         if debugging:
+            print(f'style_dirname: {style_dirname}')
             print(f'min_dist: {min_dist}')
             print(f'min_filename: {min_filename}')
             print(f'min_style: {min_style}')
@@ -935,8 +942,9 @@ class BaseTrainer(object):
             f.write(f'{datetime.now().strftime("%d-%b-%Y, %H:%M:%S.%f")}\n')
             f.write(f'inference_args: {inference_args}\n\n')
             
+            f.write(f'len(style_dict): {len(style_dict)}\n')
             f.write(f'len(style_list): {len(style_list)}\n')
-            f.write(f'len(name_list): {len(name_list)}\n\n') 
+            f.write(f'len(name_list):  {len(name_list)}\n\n') 
             
             f.write(f'style_mean: {style_mean}\n')
             f.write(f'style_mean.size(): {style_mean.size()}\n\n')
