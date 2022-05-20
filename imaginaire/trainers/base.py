@@ -882,6 +882,7 @@ class BaseTrainer(object):
                     styles = torch.cat((styles, style), dim=3)
                 
                 if debugging:
+                    #print(f'data: {data}')
                     print(f'style: {style}')
                     print(f'file_names: {file_names}')
                     print(f'styles: {styles}')
@@ -927,9 +928,31 @@ class BaseTrainer(object):
         elif munit_style == 'random':
             style_tensor = 'random'
         else:
-            print("Wrong choice!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!, please check your option for munit style!!")
-                   
+            print("Wrong choice!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!, please check your option for munit style!!")            
+        
+        from datetime import datetime
+        with open(os.path.join(output_dir, '../min_max_dist_images.txt'),"a") as f:
+            f.write(f'{datetime.now().strftime("%d-%b-%Y, %H:%M:%S.%f")}\n')
+            f.write(f'inference_args: {inference_args}\n\n')
+            
+            f.write(f'len(style_list): {len(style_list)}\n')
+            f.write(f'len(name_list): {len(name_list)}\n\n') 
+            
+            f.write(f'style_mean: {style_mean}\n')
+            f.write(f'style_mean.size(): {style_mean.size()}\n\n')
 
+            f.write(f'min_dist: {min_dist}\n')
+            f.write(f'min_filename: {min_filename}\n')
+            f.write(f'min_style: {min_style}\n\n')
+            
+            f.write(f'max_dist: {max_dist}\n')
+            f.write(f'max_filename: {max_filename}\n')
+            f.write(f'max_style: {max_style}\n\n')
+            
+            f.write(f'munit_style: {munit_style}\n')
+            f.write(f'style_tensor: {style_tensor}\n\n\n')
+            
+            
         print('# of samples %d' % len(data_loader))
         for it, data in enumerate(tqdm(data_loader)):
             data = self.start_of_iteration(data, current_iteration=-1)
