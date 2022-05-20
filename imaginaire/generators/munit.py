@@ -221,24 +221,16 @@ class Generator(nn.Module):
         else:
             input_key = 'images_b'
             style_encode = self.autoencoder_a.style_encoder
-
-        content_images = data[input_key]
         
         if True:
-            style_key = 'images_b' if a2b else 'images_a'
-            assert style_key in data.keys(), \
-                "{} must be provided when 'random_style' " \
-                "is set to False".format(style_key)
+            style_key = 'images_b' if a2b else 'images_a'            
             style_images = data[style_key]
             style = style_encode(style_images)
+            style_filenames = data['key'][style_key]['filename']            
+            style_dirnames = data['key'][style_key]['lmdb_root']
+            style_dirname = style_dirnames[0] + '/' + style_key
             
-            file_names = data['key'][input_key]['filename']
-            
-            #print(f'data: {data}') 
-            #print(f'style: {style}')
-            #print(f'file_names: {file_names}')
-            
-        return style, file_names
+        return style, style_filenames, style_dirname
         
 
 class AutoEncoder(nn.Module):
