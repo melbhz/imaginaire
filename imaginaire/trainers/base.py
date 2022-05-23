@@ -966,10 +966,10 @@ class BaseTrainer(object):
             #df_style = pd.DataFrame(data=[name_list, style_list], columns=['file_name', 'style_code'])
             #print(f'df_style:{df_style}')
             styles_numpy = styles.cpu().detach().clone().numpy()
-            print(f'styles_numpy: {styles_numpy}\n styles_numpy.shape: {styles_numpy.shape}')
+            print(f'styles_numpy.shape: {styles_numpy.shape}')
             import numpy as np
-            np.save(os.path.join(output_dir, '../styles_a2b{dict_inference_args["a2b"]}'), styles_numpy)
-            print('Saving style codes numpy to {}'.format(os.path.join(output_dir, '../styles_a2b{dict_inference_args["a2b"]}')))
+            np.save(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}'), styles_numpy)
+            print('Saving style codes numpy to {}'.format(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}')))
             return        
             
             
