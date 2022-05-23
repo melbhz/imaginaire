@@ -848,7 +848,7 @@ class BaseTrainer(object):
                                                minus1to1_normalized=True)
                 save_pilimage_in_jpeg(fullname, output_image)
 
-    def test_style(self, data_loader, output_dir, munit_style, inference_args):
+    def test_style(self, data_loader, output_dir, munit_style, save_style_codes_only, inference_args):
         r"""Compute results images for a batch of input data and save the
         results in the specified folder.
 
@@ -902,7 +902,8 @@ class BaseTrainer(object):
         for file_name, style in style_dict.items(): #zip(style_list, name_list):
             style = style.unsqueeze(0)
             dist = (style - style_mean).pow(2).sum(1).sqrt()
-            print(f'file_name: {file_name}\n style.size(): {style.size()}')
+            if debugging:
+                print(f'file_name: {file_name}\n style.size(): {style.size()}')
             #euclidena_dist = sum(((a - b)**2).reshape(8))
             if min_dist > dist:
                 min_dist = dist
@@ -959,6 +960,16 @@ class BaseTrainer(object):
             
             f.write(f'munit_style: {munit_style}\n')
             f.write(f'style_tensor: {style_tensor}\n\n\n')
+            
+        if save_style_codes_only:
+            #import pandas as pd
+            #df_style = pd.DataFrame(data=[name_list, style_list], columns=['file_name', 'style_code'])
+            #print(f'df_style:{df_style}')
+            styles_numpy = styles.cpu().detach().clone().numpy()
+            print(f'styles_numpy: {styles_numpy}\n styles_numpy.shape: {styles_numpy.shape}')
+            import numpy as np
+            np.save(os.path.join(output_dir, '../styles_a2b{dict_inference_args['a2b']}'), styles_numpy)            
+            return        
             
             
         print('# of samples %d' % len(data_loader))
