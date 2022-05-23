@@ -34,6 +34,7 @@ def parse_args():
     parser.add_argument('--debug', action='store_true')
     
     parser.add_argument('--munit_style', default='mean', help='style for munit inference: max, min, mean, random')
+    parser.add_argument('--save_style_codes_only', action='store_true')
     
     args = parser.parse_args()
     return args
@@ -91,7 +92,7 @@ def main():
     trainer.current_epoch = -1
     trainer.current_iteration = -1
     #trainer.test(test_data_loader, args.output_dir, cfg.inference_args)
-    trainer.test_style(test_data_loader, args.output_dir, args.munit_style, cfg.inference_args)
+    trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only, cfg.inference_args)
 
 
 if __name__ == "__main__":
