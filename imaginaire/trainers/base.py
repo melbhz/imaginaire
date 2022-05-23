@@ -939,6 +939,7 @@ class BaseTrainer(object):
             print("Wrong choice!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!, please check your option for munit style!!")            
         
         from datetime import datetime
+        import shutil
         with open(os.path.join(output_dir, '../min_max_dist_images.txt'),"a") as f:
             f.write(f'{datetime.now().strftime("%d-%b-%Y, %H:%M:%S.%f")}\n')
             f.write(f'inference_args: {inference_args}\n\n')
@@ -957,6 +958,15 @@ class BaseTrainer(object):
             f.write(f'max_dist: {max_dist}\n')
             f.write(f'max_filename: {max_filename}\n')
             f.write(f'max_style: {max_style}\n\n')
+            
+            min_copy = os.path.join(output_dir, f'../min_style_a2b_{dict_inference_args["a2b"]}.jpg')
+            max_copy = os.path.join(output_dir, f'../max_style_a2b_{dict_inference_args["a2b"]}.jpg')          
+            shutil.copyfile(min_filename, min_copy)
+            shutil.copyfile(max_filename, max_copy)
+            f.write(f'save a copy of min style image from {min_filename} to {min_copy}\n')
+            f.write(f'save a copy of max style image from {max_filename} to {max_copy}\n\n')
+            print(f'save a copy of min style image from {min_filename} to {min_copy}\n')
+            print(f'save a copy of max style image from {max_filename} to {max_copy}\n\n')
             
             f.write(f'munit_style: {munit_style}\n')
             f.write(f'style_tensor: {style_tensor}\n\n\n')
