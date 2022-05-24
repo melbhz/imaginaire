@@ -848,7 +848,7 @@ class BaseTrainer(object):
                                                minus1to1_normalized=True)
                 save_pilimage_in_jpeg(fullname, output_image)
 
-    def test_style(self, data_loader, output_dir, munit_style, save_style_codes_only, inference_args):
+    def test_style(self, data_loader, output_dir, munit_style, save_style_codes_only, all_styles, inference_args):
         r"""Compute results images for a batch of input data and save the
         results in the specified folder.
 
@@ -971,29 +971,49 @@ class BaseTrainer(object):
             f.write(f'munit_style: {munit_style}\n')
             f.write(f'style_tensor: {style_tensor}\n\n\n')
             
-        if save_style_codes_only:
-            #import pandas as pd
-            #df_style = pd.DataFrame(data=[name_list, style_list], columns=['file_name', 'style_code'])
-            #print(f'df_style:{df_style}')
+        
+        if all_styles:
+            all_style_tensors = [style_mean, min_style, max_style, 'random']
+            all_subfolders = ['mean', 'min', 'max', 'random']
+            for style_tensor, subfolder in zip(all_style_tensors, all_subfolders):
+                print('# of samples %d' % len(data_loader))
+                for it, data in enumerate(tqdm(data_loader)):
+                    data = self.start_of_iteration(data, current_iteration=-1)
+                    with torch.no_grad():
+                        output_images, file_names = \
+                            net_G.inference_style(data, style_tensor, **vars(inference_args))
+                    for output_image, file_name in zip(output_images, file_names):
+                        fullname = os.path.join(output_dir, subfolder, file_name + '.jpg')
+                        output_image = tensor2pilimage(output_image.clamp_(-1, 1),
+                                                       minus1to1_normalized=True)
+                        save_pilimage_in_jpeg(fullname, output_image)
+                        
+        elif save_style_codes_only:
             styles_numpy = styles.cpu().detach().clone().numpy()
             print(f'styles_numpy.shape: {styles_numpy.shape}')
             import numpy as np
             np.save(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}'), styles_numpy)
             print('Saving style codes numpy to {}'.format(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}')))
-            return        
-            
-            
-        print('# of samples %d' % len(data_loader))
-        for it, data in enumerate(tqdm(data_loader)):
-            data = self.start_of_iteration(data, current_iteration=-1)
-            with torch.no_grad():
-                output_images, file_names = \
-                    net_G.inference_style(data, style_tensor, **vars(inference_args))
-            for output_image, file_name in zip(output_images, file_names):
-                fullname = os.path.join(output_dir, file_name + '.jpg')
-                output_image = tensor2pilimage(output_image.clamp_(-1, 1),
-                                               minus1to1_normalized=True)
-                save_pilimage_in_jpeg(fullname, output_image)
+            return
+        else:            
+            print('# of samples %d' % len(data_loader))
+            for it, data in enumerate(tqdm(data_loader)):
+                data = self.start_of_iteration(data, current_iteration=-1)
+                with torch.no_grad():
+                    output_images, file_names = \
+                        net_G.inference_style(data, style_tensor, **vars(inference_args))
+                for output_image, file_name in zip(output_images, file_names):
+                    fullname = os.path.join(output_dir, file_name + '.jpg')
+                    output_image = tensor2pilimage(output_image.clamp_(-1, 1),
+                                                   minus1to1_normalized=True)
+                    save_pilimage_in_jpeg(fullname, output_image)
+                    
+        styles_numpy = styles.cpu().detach().clone().numpy()
+        print(f'styles_numpy.shape: {styles_numpy.shape}')
+        import numpy as np
+        np.save(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}'), styles_numpy)
+        print('Saving style codes numpy to {}'.format(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}')))
+        
 
     def _get_total_loss(self, gen_forward):
         r"""Return the total loss to be backpropagated.
