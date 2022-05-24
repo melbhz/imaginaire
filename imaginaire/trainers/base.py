@@ -940,7 +940,17 @@ class BaseTrainer(object):
         
         from datetime import datetime
         import shutil
-        with open(os.path.join(output_dir, '../min_max_dist_images.txt'),"a") as f:
+        if all_styles or save_style_codes_only:
+            txt_log = os.path.join(output_dir, 'min_max_dist_images.txt')
+            min_copy = os.path.join(output_dir, f'min_style_a2b_{dict_inference_args["a2b"]}.jpg')
+            max_copy = os.path.join(output_dir, f'max_style_a2b_{dict_inference_args["a2b"]}.jpg')
+            styles_log = os.path.join(output_dir, f'styles_a2b_{dict_inference_args["a2b"]}')
+        else:
+            txt_log = os.path.join(output_dir, '../min_max_dist_images.txt')
+            min_copy = os.path.join(output_dir, f'../min_style_a2b_{dict_inference_args["a2b"]}.jpg')
+            max_copy = os.path.join(output_dir, f'../max_style_a2b_{dict_inference_args["a2b"]}.jpg')
+            styles_log = os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}')
+        with open(txt_log,"a") as f:
             f.write(f'{datetime.now().strftime("%d-%b-%Y, %H:%M:%S.%f")}\n')
             f.write(f'inference_args: {inference_args}\n\n')
             
@@ -958,9 +968,7 @@ class BaseTrainer(object):
             f.write(f'max_dist: {max_dist}\n')
             f.write(f'max_filename: {max_filename}\n')
             f.write(f'max_style: {max_style}\n\n')
-            
-            min_copy = os.path.join(output_dir, f'../min_style_a2b_{dict_inference_args["a2b"]}.jpg')
-            max_copy = os.path.join(output_dir, f'../max_style_a2b_{dict_inference_args["a2b"]}.jpg')          
+
             shutil.copyfile(min_filename, min_copy)
             shutil.copyfile(max_filename, max_copy)
             f.write(f'save a copy of min style image from {min_filename} to {min_copy}\n')
@@ -969,8 +977,7 @@ class BaseTrainer(object):
             print(f'save a copy of max style image from {max_filename} to {max_copy}\n\n')
             
             f.write(f'munit_style: {munit_style}\n')
-            f.write(f'style_tensor: {style_tensor}\n\n\n')
-            
+            f.write(f'style_tensor: {style_tensor}\n\n\n')            
         
         if all_styles:
             all_style_tensors = [style_mean, min_style, max_style, 'random']
@@ -992,8 +999,8 @@ class BaseTrainer(object):
             styles_numpy = styles.cpu().detach().clone().numpy()
             print(f'styles_numpy.shape: {styles_numpy.shape}')
             import numpy as np
-            np.save(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}'), styles_numpy)
-            print('Saving style codes numpy to {}'.format(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}')))
+            np.save(styles_log, styles_numpy)
+            print('Saving style codes numpy to {}'.format(styles_log))
             return
         else:            
             print('# of samples %d' % len(data_loader))
@@ -1011,8 +1018,8 @@ class BaseTrainer(object):
         styles_numpy = styles.cpu().detach().clone().numpy()
         print(f'styles_numpy.shape: {styles_numpy.shape}')
         import numpy as np
-        np.save(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}'), styles_numpy)
-        print('Saving style codes numpy to {}'.format(os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}')))
+        np.save(styles_log, styles_numpy)
+        print('Saving style codes numpy to {}'.format(styles_log))
         
 
     def _get_total_loss(self, gen_forward):
