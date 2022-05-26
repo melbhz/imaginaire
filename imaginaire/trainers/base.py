@@ -848,7 +848,7 @@ class BaseTrainer(object):
                                                minus1to1_normalized=True)
                 save_pilimage_in_jpeg(fullname, output_image)
 
-    def test_style(self, data_loader, output_dir, munit_style, save_style_codes_only, all_styles, inference_args):
+    def test_style(self, data_loader, output_dir, munit_style, save_style_codes_only, all_styles, grid_styles, inference_args):
         r"""Compute results images for a batch of input data and save the
         results in the specified folder.
 
@@ -979,7 +979,44 @@ class BaseTrainer(object):
             f.write(f'munit_style: {munit_style}\n')
             f.write(f'style_tensor: {style_tensor}\n\n\n')            
         
-        if all_styles:
+        
+        if grid_styles:
+            lft, _ = styles.min(dim=0, keepdim=True)
+            rght, _ = styles.max(dim=0, keepdim=True)
+            if debugging:
+                print(f'lft: {lft}\n rght: {rght}')
+                print(f'style_mean: {style_mean}')
+                print(f'torch.add(style_mean, lft) : {torch.add(style_mean, lft)}')
+                print(f'torch.add(style_mean, lft)/2 : {torch.add(style_mean, lft)/2}')
+            half_lft = torch.add(lft, torch.add(style_mean, lft)/2)
+            half_rght = torch.sub(rght, torch.sub(rght, style_mean)/2)
+            grid_style_tensors = [lft, half_lft, style_mean, half_rght, rght]
+            
+            print('# of samples %d' % len(data_loader))
+            for it, data in enumerate(tqdm(data_loader)):
+                data = self.start_of_iteration(data, current_iteration=-1)
+                vis_images = []
+                if dict_inference_args["a2b"]:
+                    vis_images.append(data['images_a'])
+                else:
+                    vis_images.append(data['images_b'])                          
+                
+                for style_tensor in grid_style_tensors:                
+                    with torch.no_grad():
+                        output_images, file_names = net_G.inference_style(data, style_tensor, **vars(inference_args))
+                        vis_images.append(output_images)
+                        
+                path = os.path.join(output_dir, file_names[0] + '.jpg')
+                if vis_images is not None:
+                    vis_images = torch.cat([img for img in vis_images if img is not None], dim=3).float()
+                    vis_images = (vis_images + 1) / 2
+                    #print('Save output images to {}'.format(path))
+                    vis_images.clamp_(0, 1)
+                    #os.makedirs(os.path.dirname(path), exist_ok=True)
+                    image_grid = torchvision.utils.make_grid(vis_images, nrow=1, padding=0, normalize=False)        
+                    torchvision.utils.save_image(image_grid, path, nrow=1)
+        
+        elif all_styles:
             all_style_tensors = [style_mean, min_style, max_style, 'random']
             all_subfolders = ['mean', 'min', 'max', 'random']
             for style_tensor, subfolder in zip(all_style_tensors, all_subfolders):
