@@ -1013,7 +1013,7 @@ class BaseTrainer(object):
                     #print('Save output images to {}'.format(path))
                     vis_images.clamp_(0, 1)
                     #os.makedirs(os.path.dirname(path), exist_ok=True)
-                    image_grid = torchvision.utils.make_grid(vis_images, nrow=1, padding=0, normalize=False)        
+                    image_grid = torchvision.utils.make_grid(vis_images, nrow=1, padding=2, normalize=False)        
                     torchvision.utils.save_image(image_grid, path, nrow=1)
         elif grid_styles:
             lft, _ = styles.min(dim=0, keepdim=True)
