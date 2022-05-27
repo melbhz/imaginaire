@@ -848,7 +848,7 @@ class BaseTrainer(object):
                                                minus1to1_normalized=True)
                 save_pilimage_in_jpeg(fullname, output_image)
 
-    def test_style(self, data_loader, output_dir, munit_style, save_style_codes_only, all_styles, grid_styles, inference_args):
+    def test_style(self, data_loader, output_dir, munit_style, save_style_codes_only, all_styles, simple_grid, grid_styles, inference_args):
         r"""Compute results images for a batch of input data and save the
         results in the specified folder.
 
@@ -980,7 +980,7 @@ class BaseTrainer(object):
             f.write(f'style_tensor: {style_tensor}\n\n\n')            
         
         
-        if grid_styles:
+        if simple_grid:
             lft, _ = styles.min(dim=0, keepdim=True)
             rght, _ = styles.max(dim=0, keepdim=True)
             if debugging:
@@ -988,7 +988,7 @@ class BaseTrainer(object):
                 print(f'style_mean: {style_mean}')
                 print(f'torch.add(style_mean, lft) : {torch.add(style_mean, lft)}')
                 print(f'torch.add(style_mean, lft)/2 : {torch.add(style_mean, lft)/2}')
-            half_lft = torch.add(lft, torch.add(style_mean, lft)/2)
+            half_lft = torch.add(lft, torch.sub(style_mean, lft)/2)
             half_rght = torch.sub(rght, torch.sub(rght, style_mean)/2)
             grid_style_tensors = [lft, half_lft, style_mean, half_rght, rght]
             
@@ -1015,7 +1015,73 @@ class BaseTrainer(object):
                     #os.makedirs(os.path.dirname(path), exist_ok=True)
                     image_grid = torchvision.utils.make_grid(vis_images, nrow=1, padding=0, normalize=False)        
                     torchvision.utils.save_image(image_grid, path, nrow=1)
-        
+        elif grid_styles:
+            lft, _ = styles.min(dim=0, keepdim=True)
+            rght, _ = styles.max(dim=0, keepdim=True)
+            if debugging:
+                print(f'lft: {lft}\n rght: {rght}')
+                print(f'style_mean: {style_mean}')
+                print(f'style_mean.size(): {style_mean.size()}')
+                print(f'style_mean.size()[1]: {style_mean.size()[1]}')
+            half_lft = torch.add(lft, torch.sub(style_mean, lft)/2)
+            half_rght = torch.sub(rght, torch.sub(rght, style_mean)/2)
+            grid_style_tensors = [lft, half_lft, style_mean, half_rght, rght]
+            full_grid_tensors = []
+            
+            for step in grid_style_tensors:
+                for dim in range(style_mean.size()[1]):
+                    tmp = style_mean.detach().clone()
+                    tmp[0, dim, 0, 0] = step[0, dim, 0, 0]
+                    #print(f'tmp[0, dim, 0, 0]:\n {tmp[0, dim, 0, 0]}\n')
+                    #print(f'tmp:\n {tmp} \n style_mean:\n {style_mean}\n')
+                    full_grid_tensors.append(tmp)
+            
+            print('# of samples %d' % len(data_loader))
+            for it, data in enumerate(tqdm(data_loader)):
+                data = self.start_of_iteration(data, current_iteration=-1)
+                vis_images = []
+                
+                for style_tensor in full_grid_tensors:                
+                    with torch.no_grad():
+                        output_images, file_names = net_G.inference_style(data, style_tensor, **vars(inference_args))
+                        vis_images.append(output_images)
+                        #print(f'output_images.size(): {output_images.size()}')
+                        
+                if dict_inference_args["a2b"]:
+                    vis_images.append(data['images_a'])
+                else:
+                    vis_images.append(data['images_b'])
+                
+                if len(file_names) == 1:
+                    path = os.path.join(output_dir, file_names[0] + '.jpg')
+                    vis_images = torch.cat([img for img in vis_images if img is not None], dim=0).float()#dim=3).float()
+                    vis_images = (vis_images + 1) / 2
+                    vis_images.clamp_(0, 1)
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    #print(f'vis_images.size(): {vis_images.size()}')
+                    image_grid = torchvision.utils.make_grid(vis_images, nrow=8, padding=2, normalize=False)        
+                    #torchvision.utils.save_image(image_grid, path, nrow=8)
+                    torchvision.transforms.ToPILImage()(image_grid).save(path)
+                elif len(file_names) > 1: # for batch > 1
+                    for i in range(len(file_names)):
+                        path = os.path.join(output_dir, file_names[i] + '.jpg')
+                        #print(f'pos1: vis_images[0].size(): {vis_images[0].size()}')
+                        #img = vis_images[0]
+                        #print(f'img[i].size(): {img[i].size()}')
+                        #print(f'img[i].unsqueeze(0).size(): {img[i].unsqueeze(0).size()}')
+                        #print(f'img[i, :, :, :].size(): {img[i, :, :, :].size()}')
+                        #print(f'img[i, :, :, :].unsqueeze(0).size(): {img[i, :, :, :].unsqueeze(0).size()}')
+                        vis_img = torch.cat([img[i].unsqueeze(0) for img in vis_images if img is not None], dim=0).float()#dim=3).float()
+                        vis_img = (vis_img + 1) / 2
+                        vis_img.clamp_(0, 1)
+                        os.makedirs(os.path.dirname(path), exist_ok=True)
+                        #print(f'pos2: vis_img.size(): {vis_img.size()}')
+                        image_grid = torchvision.utils.make_grid(vis_img, nrow=8, padding=2, normalize=False)        
+                        #torchvision.utils.save_image(image_grid, path, nrow=8)
+                        torchvision.transforms.ToPILImage()(image_grid).save(path)
+                else:
+                    print("No output images available!")
+                    
         elif all_styles:
             all_style_tensors = [style_mean, min_style, max_style, 'random']
             all_subfolders = ['mean', 'min', 'max', 'random']
