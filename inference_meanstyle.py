@@ -38,6 +38,7 @@ def parse_args():
     parser.add_argument('--all_styles', action='store_true')
     parser.add_argument('--simple_grid', action='store_true')
     parser.add_argument('--grid_styles', action='store_true')
+    parser.add_argument('--tsne_only', action='store_true')
     
     args = parser.parse_args()
     return args
@@ -95,7 +96,10 @@ def main():
     trainer.current_epoch = -1
     trainer.current_iteration = -1
     #trainer.test(test_data_loader, args.output_dir, cfg.inference_args)
-    trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only, args.all_styles, args.simple_grid, args.grid_styles, cfg.inference_args)
+    if args.tsne_only:
+        trainer.test_tsne(test_data_loader, args.output_dir, cfg.inference_args)    
+    else:
+        trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only, args.all_styles, args.simple_grid, args.grid_styles, cfg.inference_args)
 
 
 if __name__ == "__main__":
