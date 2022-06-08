@@ -261,6 +261,17 @@ class Generator(nn.Module):
             
         return content, content_filenames, content_dirname, style, style_filenames, style_dirname
         
+        
+    def inference_tensor(self, content, style, a2b=True, random_style=True):
+        if a2b:
+            decode = self.autoencoder_b.decode
+        else:
+            decode = self.autoencoder_a.decode
+
+        output_images = decode(content, style)
+        return output_images
+        
+        
 class AutoEncoder(nn.Module):
     r"""Improved MUNIT autoencoder.
 
