@@ -1358,6 +1358,7 @@ class BaseTrainer(object):
         import numpy as np
         import shutil
         #content = contents[tsne_one_image_id].unsqueeze(0)
+        content = content_list[tsne_one_image_id].unsqueeze(0)
         print(f'The one image to translate is {content_fname_list[tsne_one_image_id]}')
         content_image_src = os.path.join(content_dirname, f'{content_fname_list[tsne_one_image_id]}.jpg')
         content_image_copy = os.path.join(output_dir, f'../image_{tsne_one_image_id}_a2b_{dict_inference_args["a2b"]}.jpg')
