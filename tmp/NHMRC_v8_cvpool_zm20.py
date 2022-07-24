@@ -425,5 +425,5 @@ if __name__ == "__main__":
     # save_zoom_up_large_images()
     # save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY=5, IMGSIZE=256, NUM_CPUS=24)
     FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AlcoholDrinksPerWeek'
-    save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=5, IMGSIZE=256, NUM_CPUS=24, images_a='images_a',
+    save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=3, IMGSIZE=256*5, NUM_CPUS=24, images_a='images_a',
                               images_b='images_b', split_percentage=10)
