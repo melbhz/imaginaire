@@ -315,8 +315,8 @@ def save_combined_tile_images(FROM_DIR, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM
         print(f'time last: {time.time() - start}')
 
         start = time.time()
-        onlyfiles = [os.path.join(train, x) for x in os.listdir(train_aORb)]
-        onlyfiles += [os.path.join(val, x) for x in os.listdir(val_aORb)]
+        onlyfiles = [os.path.join(train, images_aORb, x) for x in os.listdir(train_aORb)]
+        onlyfiles += [os.path.join(val, images_aORb, x) for x in os.listdir(val_aORb)]
         # os.listdir(FROM_DIR) is fast but not as safe as using [f for f in os.listdir(FROM_DIR) if os.path.isfile(os.path.join(FROM_DIR, f))]
         print(f'from dir images: {len(onlyfiles)}')
         print(f'time last: {time.time() - start}')
