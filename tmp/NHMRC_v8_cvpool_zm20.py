@@ -5,6 +5,9 @@ import numpy as np
 from shutil import copyfile
 import multiprocessing as mp
 import cv2
+from glob import glob
+import random
+from shutil import move
 
 
 def save_zoom_up_images(FROM_DIR, TO_DIR, IMGSIZE = 256 * 2, NUM_CPUS = 24):
@@ -276,90 +279,112 @@ def merge_image_list_large(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGS
 
 
 
-def save_combined_tile_images(FROM_DIR, TO_DIR, N_XY = 5, IMGSIZE = 256, NUM_CPUS = 24):
-    # FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AnxietyDiag/train/images_b'
-    # TO_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AnxietyDiag/train_imagesb_n10'
-    # N_XY = 10
-    # IMGSIZE = 256 * N_XY
-    # NUM_CPUS = 24
-    N_STEP = N_XY
-
+def save_combined_tile_images(FROM_DIR, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM_CPUS = 24, images_a = 'images_a', images_b = 'images_b', split_percentage=10):
+    # N_STEP = N_XY
     if not os.path.exists(FROM_DIR):
         print("{} not exist!".format(FROM_DIR))
         return
-    if not os.path.exists(TO_DIR):
-        print("{} not exist, creating it...".format(TO_DIR))
-        os.makedirs(TO_DIR)
 
-    dirList = os.listdir(TO_DIR)
-    downloadedImagesDict = {}
-    start = time.time()
-    for image in dirList:
-        downloadedImagesDict[image] = image
-    print(f'already saved images: {len(downloadedImagesDict)}')
-    print(f'time last: {time.time() - start}')
+    for images_aORb in [images_a, images_b]:
+        train, val = ('train', 'val')
+        train_aORb = os.path.join(FROM_DIR, train, images_aORb)
+        val_aORb = os.path.join(FROM_DIR, val, images_aORb)
+        if not os.path.exists(train_aORb):
+            print("{} not exist!".format(train_aORb))
+            return
+        if not os.path.exists(val_aORb):
+            print("{} not exist!".format(val_aORb))
+            return
 
-    start = time.time()
-    onlyfiles = os.listdir(FROM_DIR)
-    # os.listdir(FROM_DIR) is fast but not as safe as using [f for f in os.listdir(FROM_DIR) if os.path.isfile(os.path.join(FROM_DIR, f))]
-    print(f'from dir images: {len(onlyfiles)}')
-    print(f'time last: {time.time() - start}')
+        result_images_aORb = f'{images_aORb}_{N_XY}_{N_STEP}_{IMGSIZE}'
+        result_train_aORb = os.path.join(FROM_DIR, train, result_images_aORb)
+        result_val_aORb = os.path.join(FROM_DIR, val, result_images_aORb)
+        if not os.path.exists(result_train_aORb):
+            print("{} not exist, creating it...".format(result_train_aORb))
+            os.makedirs(result_train_aORb)
+        if not os.path.exists(result_val_aORb):
+            print("{} not exist, creating it...".format(result_val_aORb))
+            os.makedirs(result_val_aORb)
 
-    fn_dict = {filename.strip().split('~')[1]: filename for filename in onlyfiles}
-    fn_array = np.array(list(fn_dict.items()))
-    print(f'fn_array.shape: {fn_array.shape}')
+        dirList = os.listdir(result_train_aORb)
+        downloadedImagesDict = {}
+        start = time.time()
+        for image in dirList:
+            downloadedImagesDict[image] = image
+        print(f'already saved images: {len(downloadedImagesDict)}')
+        print(f'time last: {time.time() - start}')
 
-    coords = [[int(x) for x in coord.split(',')] for coord in fn_dict.keys()]
-    coord_array = np.array(coords) #, dtype=np.uint32)
-    print(f'coord_array.shape: {coord_array.shape}')
-    print(f'coord_array.dtype: {coord_array.dtype}')
-    print(f'coord_array[:5] {coord_array[:5]}')
+        start = time.time()
+        onlyfiles = [os.path.join(train, x) for x in os.listdir(train_aORb)]
+        onlyfiles += [os.path.join(val, x) for x in os.listdir(val_aORb)]
+        # os.listdir(FROM_DIR) is fast but not as safe as using [f for f in os.listdir(FROM_DIR) if os.path.isfile(os.path.join(FROM_DIR, f))]
+        print(f'from dir images: {len(onlyfiles)}')
+        print(f'time last: {time.time() - start}')
 
-    minXY = np.amin(coord_array[:, :2], axis=0)
-    maxXY = np.amax(coord_array[:, :2], axis=0)
-    # minXY = np.amin(data[:, :2].astype(np.int), axis=0)
-    # maxXY = np.amax(data[:, :2].astype(np.int), axis=0)
-    print('minXY, maxXY = {}, {}'.format(minXY, maxXY))
-    # return
+        fn_dict = {filename.strip().split('~')[1]: filename for filename in onlyfiles}
+        fn_array = np.array(list(fn_dict.items()))
+        print(f'fn_array.shape: {fn_array.shape}')
+
+        coords = [[int(x) for x in coord.split(',')] for coord in fn_dict.keys()]
+        coord_array = np.array(coords) #, dtype=np.uint32)
+        print(f'coord_array.shape: {coord_array.shape}')
+        print(f'coord_array.dtype: {coord_array.dtype}')
+        print(f'coord_array[:5] {coord_array[:5]}')
+
+        minXY = np.amin(coord_array[:, :2], axis=0)
+        maxXY = np.amax(coord_array[:, :2], axis=0)
+        # minXY = np.amin(data[:, :2].astype(np.int), axis=0)
+        # maxXY = np.amax(data[:, :2].astype(np.int), axis=0)
+        print('minXY, maxXY = {}, {}'.format(minXY, maxXY))
+        # return
+
+        start = time.time()
+        filename_list = []
+
+        for x in range(minXY[0], maxXY[0], N_STEP):
+            for y in range(minXY[1], maxXY[1], N_STEP):
+                newfilename = str(x) + ',' + str(y) + '.jpg'
+                xy = str(x) + ',' + str(y)
+                if newfilename in downloadedImagesDict or xy not in fn_dict:
+                    continue
+                else:
+                    filename_list.append(newfilename)
+        print(f'images to get: {len(filename_list)}')
+
+        num_point_per_cpu = math.ceil(len(filename_list) / NUM_CPUS)
+        filename_list_nested = [filename_list[i * num_point_per_cpu:(i + 1) * num_point_per_cpu]
+                                if (i + 1) * num_point_per_cpu < len(filename_list)
+                                else filename_list[i * num_point_per_cpu:]
+                                for i in range(NUM_CPUS)]
+        if len(filename_list_nested) != NUM_CPUS:
+            print("!!!!!!!!!!!!!!!!!!!!! len(filename_list_nested) != NUM_CPUS")
+            return
+
+        pool = mp.Pool()
+        for i in range(NUM_CPUS):
+            pool.apply_async(merge_image_list_tile, args=(i, filename_list_nested[i], fn_dict, FROM_DIR, result_train_aORb, IMGSIZE, N_XY))
+
+        '''    
+        results = []
+        for i in range(len(filename_list)):
+            results.append(pool.apply_async(merge_image, args=(i,filename_list[i])))
+        '''
+
+        pool.close()
+        pool.join()
+        print("zoom up conversion finished!")
+
+        split_train_val(result_train_aORb, result_val_aORb, split_percentage)
+        print(f"moving {split_percentage}% images from {result_train_aORb} to {result_val_aORb} finished!")
 
 
-    start = time.time()
-    filename_list = []
-
-    for x in range(minXY[0], maxXY[0], N_STEP):
-        for y in range(minXY[1], maxXY[1], N_STEP):
-            newfilename = str(x) + ',' + str(y) + '.jpg'
-            xy = str(x) + ',' + str(y)
-            if newfilename in downloadedImagesDict or xy not in fn_dict:
-                continue
-            else:
-                filename_list.append(newfilename)
-
-    print(f'images to get: {len(filename_list)}')
-
-    num_point_per_cpu = math.ceil(len(filename_list) / NUM_CPUS)
-    filename_list_nested = [filename_list[i * num_point_per_cpu:(i + 1) * num_point_per_cpu]
-                            if (i + 1) * num_point_per_cpu < len(filename_list)
-                            else filename_list[i * num_point_per_cpu:]
-                            for i in range(NUM_CPUS)]
-    if len(filename_list_nested) != NUM_CPUS:
-        print("!!!!!!!!!!!!!!!!!!!!! len(filename_list_nested) != NUM_CPUS")
-        return
-
-    pool = mp.Pool()
-    for i in range(NUM_CPUS):
-        pool.apply_async(merge_image_list_tile, args=(i, filename_list_nested[i], fn_dict, FROM_DIR, TO_DIR, IMGSIZE, N_XY))
-
-    '''    
-    results = []
-    for i in range(len(filename_list)):
-        results.append(pool.apply_async(merge_image, args=(i,filename_list[i])))
-    '''
-
-    pool.close()
-    pool.join()
-    print("zoom up conversion finished!")
-
+def split_train_val(DIR, TARGET, percentage=10):
+    imgs_all = glob(DIR + "/*")
+    imgs = random.sample(imgs_all, int(len(imgs_all) * percentage / 100))
+    for path in imgs:
+        imgname = path.split("/")[-1]
+        dest = TARGET + '/' + imgname
+        move(path, dest)
 
 def merge_image_list_tile(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGSIZE, N_XY=10):
     print(f'cpuid: {cpuid}')
@@ -398,6 +423,7 @@ def merge_image_list_tile(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGSI
 if __name__ == "__main__":
     # save_zoom_up_images()
     # save_zoom_up_large_images()
-    FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AlcoholDrinksPerWeek/train/images_a'
-    TO_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AlcoholDrinksPerWeek/train/images_a_n5'
-    save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY=5, IMGSIZE=256, NUM_CPUS=24)
+    # save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY=5, IMGSIZE=256, NUM_CPUS=24)
+    FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AlcoholDrinksPerWeek'
+    save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=5, IMGSIZE=256, NUM_CPUS=24, images_a='images_a',
+                              images_b='images_b', split_percentage=10)
