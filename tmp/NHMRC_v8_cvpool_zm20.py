@@ -280,7 +280,21 @@ def merge_image_list_large(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGS
 
 
 def save_combined_tile_images(FROM_DIR, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM_CPUS = 24, images_a = 'images_a', images_b = 'images_b', split_percentage=10):
-    # N_STEP = N_XY
+    '''
+    Args:
+        FROM_DIR:
+        N_XY: the "Kernel"
+        N_STEP: the "Stride", recommend N_STEP=N_XY
+        IMGSIZE: result image size in pixels, recommend 256*N_XY
+        NUM_CPUS: should be le <= n of cpus for partitions See https://dashboard.hpc.unimelb.edu.au/status_specs/
+        images_a:
+        images_b:
+        split_percentage: train/val split
+
+    Returns:
+        None
+        Result images saved in folders
+    '''
     if not os.path.exists(FROM_DIR):
         print("{} not exist!".format(FROM_DIR))
         return
@@ -296,9 +310,12 @@ def save_combined_tile_images(FROM_DIR, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM
             print("{} not exist!".format(val_aORb))
             return
 
-        result_images_aORb = f'{images_aORb}_{N_XY}_{N_STEP}_{IMGSIZE}'
-        result_train_aORb = os.path.join(FROM_DIR, train, result_images_aORb)
-        result_val_aORb = os.path.join(FROM_DIR, val, result_images_aORb)
+        # result_images_aORb = f'{images_aORb}_{N_XY}_{N_STEP}_{IMGSIZE}'
+        # result_train_aORb = os.path.join(FROM_DIR, train, result_images_aORb)
+        # result_val_aORb = os.path.join(FROM_DIR, val, result_images_aORb)
+        new_folder = f'Combined_k{N_XY}_s{N_STEP}_p{IMGSIZE}'
+        result_train_aORb = os.path.join(FROM_DIR, new_folder, train, images_aORb)
+        result_val_aORb = os.path.join(FROM_DIR, new_folder, val, images_aORb)
         if not os.path.exists(result_train_aORb):
             print("{} not exist, creating it...".format(result_train_aORb))
             os.makedirs(result_train_aORb)
@@ -374,8 +391,9 @@ def save_combined_tile_images(FROM_DIR, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM
         pool.join()
         print("zoom up conversion finished!")
 
+        # above have put all images in train folder, next will move a certain percentage to val folder
         split_train_val(result_train_aORb, result_val_aORb, split_percentage)
-        print(f"moving {split_percentage}% images from {result_train_aORb} to {result_val_aORb} finished!")
+        print(f"moving {split_percentage}% images from {result_train_aORb} to {result_val_aORb} finished! - time last: {time.time() - start}")
 
 
 def split_train_val(DIR, TARGET, percentage=10):
@@ -386,7 +404,8 @@ def split_train_val(DIR, TARGET, percentage=10):
         dest = TARGET + '/' + imgname
         move(path, dest)
 
-def merge_image_list_tile(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGSIZE, N_XY=10):
+
+def merge_image_list_tile(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGSIZE, N_XY=5):
     print(f'cpuid: {cpuid}')
     print(f'len(filename_list): {len(filename_list)}')
     cols = rows = N_XY
@@ -420,10 +439,35 @@ def merge_image_list_tile(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGSI
     print(f'cpu {cpuid} - done.')
 
 
+def test():
+    FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AlcoholDrinksPerWeek'
+    save_combined_tile_images(FROM_DIR, N_XY=2, N_STEP=2, IMGSIZE=256*2, NUM_CPUS=8, images_a='images_a',
+                              images_b='images_b', split_percentage=10)
+
+def run_all_zoom20_combination():
+    factors = [
+        "age", "AnxietyDiag", "FeelDepressed", "HoursSittingPerDay", "BMI", "GeneralHealthRating", "SmokeCigsDay", "AlcoholDrinksPerWeek", "DepressionDiag"
+        # , "AlcoholDaysPerWeek", "HighBloodPresDiag"
+        ]
+    for factor in factors:
+        FROM_DIR = f'/data/scratch/projects/punim1358/Datasets/NSW_SA2/{factor}'
+        save_combined_tile_images(FROM_DIR, N_XY=2, N_STEP=2, IMGSIZE=256*2, NUM_CPUS=24, images_a='images_a',
+                              images_b='images_b', split_percentage=10)
+
+def run_all_five_image_tiles_combination():
+    factors = [
+        "age", "AnxietyDiag", "FeelDepressed", "HoursSittingPerDay", "BMI", "GeneralHealthRating", "SmokeCigsDay", "AlcoholDrinksPerWeek", "DepressionDiag"
+        # , "AlcoholDaysPerWeek", "HighBloodPresDiag"
+        ]
+    for factor in factors:
+        FROM_DIR = f'/data/scratch/projects/punim1358/Datasets/NSW_SA2/{factor}'
+        save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=3, IMGSIZE=256*5, NUM_CPUS=24, images_a='images_a',
+                              images_b='images_b', split_percentage=10)
 if __name__ == "__main__":
     # save_zoom_up_images()
     # save_zoom_up_large_images()
     # save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY=5, IMGSIZE=256, NUM_CPUS=24)
-    FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AlcoholDrinksPerWeek'
-    save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=3, IMGSIZE=256*5, NUM_CPUS=24, images_a='images_a',
-                              images_b='images_b', split_percentage=10)
+    # test()
+    run_all_zoom20_combination()
+    run_all_five_image_tiles_combination()
+
