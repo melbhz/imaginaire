@@ -443,6 +443,7 @@ def test():
     FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AlcoholDrinksPerWeek'
     save_combined_tile_images(FROM_DIR, N_XY=2, N_STEP=2, IMGSIZE=256*2, NUM_CPUS=8, images_a='images_a',
                               images_b='images_b', split_percentage=10)
+    print('test() Run Finished!')
 
 def run_all_zoom20_combination():
     factors = [
@@ -453,6 +454,7 @@ def run_all_zoom20_combination():
         FROM_DIR = f'/data/scratch/projects/punim1358/Datasets/NSW_SA2/{factor}'
         save_combined_tile_images(FROM_DIR, N_XY=2, N_STEP=2, IMGSIZE=256*2, NUM_CPUS=24, images_a='images_a',
                               images_b='images_b', split_percentage=10)
+    print('run_all_zoom20_combination() Run Finished!')
 
 def run_all_five_image_tiles_combination():
     factors = [
@@ -463,6 +465,7 @@ def run_all_five_image_tiles_combination():
         FROM_DIR = f'/data/scratch/projects/punim1358/Datasets/NSW_SA2/{factor}'
         save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=3, IMGSIZE=256*5, NUM_CPUS=24, images_a='images_a',
                               images_b='images_b', split_percentage=10)
+    print('run_all_five_image_tiles_combination() Run Finished!')
 if __name__ == "__main__":
     # save_zoom_up_images()
     # save_zoom_up_large_images()
