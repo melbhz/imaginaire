@@ -1553,8 +1553,136 @@ class BaseTrainer(object):
             
         path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
         '''
-        
-        
+
+    def test_tsne_one_image_discriminator(self, data_loader, output_dir, tsne_one_image_id, inference_args):
+        if self.cfg.trainer.model_average_config.enabled:
+            net_G = self.net_G.module.averaged_model
+        else:
+            net_G = self.net_G.module
+        net_G.eval()
+
+        net_D = self.net_D
+        print(net_D)
+        return
+
+        dict_inference_args = dict(inference_args)
+        print(f"dict_inference_args: {dict_inference_args}")
+        debugging = False  # True
+        print('# of samples for getting content and style code: %d' % len(data_loader))
+
+        with torch.no_grad():
+            content_dict = {}
+            content_list = []
+            content_fname_list = []
+            style_dict = {}
+            style_list = []
+            style_fname_list = []
+        for it, data in enumerate(tqdm(data_loader)):
+            data = self.start_of_iteration(data, current_iteration=-1)
+            with torch.no_grad():
+                # style_tensors, style_filenames, style_dirname = net_G.get_style_code(data, **vars(inference_args))
+                content, content_filenames, content_dirname, style, style_filenames, style_dirname = net_G.get_content_and_style_code(
+                    data, **vars(inference_args))
+
+                for cont, fn in zip(content, content_filenames):
+                    if fn not in content_dict:
+                        content_dict[fn] = cont
+                        content_list.append(cont)
+                        content_fname_list.append(fn)
+
+                for st, fn in zip(style, style_filenames):
+                    if fn not in style_dict:
+                        style_dict[fn] = st
+                        style_list.append(st)
+                        style_fname_list.append(fn)
+
+        # contents = torch.cat([x.unsqueeze(0) for x in content_list], 0)
+        styles = torch.cat([x.unsqueeze(0) for x in style_list], 0)
+
+        import numpy as np
+        import shutil
+        # content = contents[tsne_one_image_id].unsqueeze(0)
+        content = content_list[tsne_one_image_id].unsqueeze(0)
+        print(f'The one image to translate is {content_fname_list[tsne_one_image_id]}')
+        content_image_src = os.path.join(content_dirname, f'{content_fname_list[tsne_one_image_id]}.jpg')
+        content_image_copy = os.path.join(output_dir,
+                                          f'../image_{tsne_one_image_id}_a2b_{dict_inference_args["a2b"]}.jpg')
+        print(f'Make a copy of content image from {content_image_src} to \n {content_image_copy}')
+        shutil.copyfile(content_image_src, content_image_copy)
+
+        print(f'Translating one image id {tsne_one_image_id} for all styles...')
+        for file_names, style in tqdm(style_dict.items()):  # zip(styles, style_fname_list):
+            style = style.unsqueeze(0)
+            # for style, file_names in zip(styles, style_fname_list):
+            with torch.no_grad():
+                output_images = net_G.inference_tensor(content, style, **vars(inference_args))
+                file_names = np.atleast_1d(file_names)
+            for output_image, file_name in zip(output_images, file_names):
+                fullname = os.path.join(output_dir, file_name + '.jpg')
+                if debugging:
+                    print(fullname)
+                output_image = tensor2pilimage(output_image.clamp_(-1, 1),
+                                               minus1to1_normalized=True)
+                save_pilimage_in_jpeg(fullname, output_image)
+
+        if debugging:
+            print(f'contents.size(): {contents.size()}')
+            print(f'len(content_list): {len(content_list)}')
+            print(f'len(content_dict): {len(content_dict)}')
+            print(f'styles.size(): {styles.size()}')
+            print(f'len(style_list): {len(style_list)}')
+            print(f'len(style_dict): {len(style_dict)}')
+
+            print(f'last content.size(): {content.size()}')
+            print(f'last style.size(): {style.size()}')
+
+            # import numpy as np
+        content_data = {}
+        style_data = {}
+
+        # content_data['data'] = contents.detach().cpu().squeeze().numpy()
+        style_data['data'] = styles.detach().cpu().squeeze().numpy()
+
+        # content_data['filename'] = np.asarray(content_fname_list)
+        style_data['filename'] = np.asarray(style_fname_list)
+
+        # content_data['dirname'] = content_dirname
+        style_data['dirname'] = style_dirname
+
+        # content_data['a2b'] = dict_inference_args["a2b"]
+        style_data['a2b'] = dict_inference_args["a2b"]
+
+        # contents_pkl = os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}_contents.pkl')
+        styles_pkl = os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}_styles.pkl')
+
+        if debugging:
+            print(f'content_data["data"].shape: {content_data["data"].shape}')
+            print(f'content_data["dirname"]: {content_data["dirname"]}')
+            print(f'content_data["filename"].shape: {content_data["filename"].shape}')
+            print(f'style_data["data"].shape: {style_data["data"].shape}')
+            print(f'style_data["dirname"]: {style_data["dirname"]}')
+            print(f'style_data["filename"].shape: {style_data["filename"].shape}')
+
+        # print('Saving content and style codes to {} and\n {}'.format(contents_pkl, styles_pkl))
+        print(f'Saving style codes to {styles_pkl}')
+
+        import pickle
+        '''
+        with open(contents_pkl, 'wb') as f:
+            pickle.dump(content_data, f)
+        '''
+        with open(styles_pkl, 'wb') as f:
+            pickle.dump(style_data, f)
+        '''
+        with open(contents_pkl, 'rb') as f:
+            content_data = pickle.load(f)
+        with open(styles_pkl, 'rb') as f:
+            style_data = pickle.load(f)
+
+        path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
+        '''
+
+
     def _get_total_loss(self, gen_forward):
         r"""Return the total loss to be backpropagated.
         Args:

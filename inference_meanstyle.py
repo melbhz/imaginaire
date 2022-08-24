@@ -41,6 +41,7 @@ def parse_args():
     parser.add_argument('--tsne_only', action='store_true')
     parser.add_argument('--tsne_one_image', action='store_true')
     parser.add_argument('--tsne_one_image_id', type=int, default=0)
+    parser.add_argument('--tsne_one_image_discriminator', action='store_true')
     
     args = parser.parse_args()
     return args
@@ -102,6 +103,8 @@ def main():
         trainer.test_tsne(test_data_loader, args.output_dir, cfg.inference_args)    
     elif args.tsne_one_image:
         trainer.test_tsne_one_image(test_data_loader, args.output_dir, args.tsne_one_image_id, cfg.inference_args)
+    elif args.tsne_one_image_discriminator:
+        trainer.test_tsne_one_image_discriminator(test_data_loader, args.output_dir, args.tsne_one_image_id, cfg.inference_args)
     else:
         trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only, args.all_styles, args.simple_grid, args.grid_styles, cfg.inference_args)
 
