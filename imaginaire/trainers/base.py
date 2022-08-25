@@ -1561,9 +1561,9 @@ class BaseTrainer(object):
             net_G = self.net_G.module
         net_G.eval()
 
-        net_D = self.net_D
-        print(net_D)
-        return
+        # net_D = self.net_D.module
+        # print(f'self.net_D = :\n{self.net_D} \nself.net_G = :\n{self.net_G}')
+        # return
 
         dict_inference_args = dict(inference_args)
         print(f"dict_inference_args: {dict_inference_args}")
@@ -1601,6 +1601,11 @@ class BaseTrainer(object):
 
         import numpy as np
         import shutil
+
+        # if not os.path.isdir(output_dir):
+        #     os.makedirs(output_dir)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
         # content = contents[tsne_one_image_id].unsqueeze(0)
         content = content_list[tsne_one_image_id].unsqueeze(0)
         print(f'The one image to translate is {content_fname_list[tsne_one_image_id]}')
@@ -1617,13 +1622,23 @@ class BaseTrainer(object):
             with torch.no_grad():
                 output_images = net_G.inference_tensor(content, style, **vars(inference_args))
                 file_names = np.atleast_1d(file_names)
-            for output_image, file_name in zip(output_images, file_names):
+                discriminator_outputs, _ = self.net_D.module.inference(output_images, **vars(inference_args))
+                # print(f'discriminator_outputs: \n{discriminator_outputs}')
+                # continue
+
+            for output_image, file_name, disc_out in zip(output_images, file_names, discriminator_outputs):
                 fullname = os.path.join(output_dir, file_name + '.jpg')
                 if debugging:
                     print(fullname)
-                output_image = tensor2pilimage(output_image.clamp_(-1, 1),
-                                               minus1to1_normalized=True)
-                save_pilimage_in_jpeg(fullname, output_image)
+                print(f'disc_out: {disc_out}')
+                if disc_out.item() <= -1:
+                # if disc_out.item() >= 1:
+                    print(f'disc_out: {disc_out}')
+                    output_image = tensor2pilimage(output_image.clamp_(-1, 1),
+                                                   minus1to1_normalized=True)
+                    save_pilimage_in_jpeg(fullname, output_image)
+        print("Debug Done, return.")
+        return
 
         if debugging:
             print(f'contents.size(): {contents.size()}')

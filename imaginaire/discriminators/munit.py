@@ -97,3 +97,18 @@ class Discriminator(nn.Module):
             output.update(dict(out_aa=out_aa, out_bb=out_bb,
                                fea_aa=fea_aa, fea_bb=fea_bb))
         return output
+
+
+    def inference(self, images, a2b=True, random_style=True):
+        r"""MUNIT inference for discriminator.
+        target_real_label=1.0, target_fake_label=0.0,
+        It is trained using gan_mode: hinge. Therefore outputs <=-1 means False (no loss), >=1 means True (no loss)
+        Next time maybe use gan_mode: softplus
+        by HZ
+        """
+        if a2b:
+            discriminator = self.discriminator_b
+        else:
+            discriminator = self.discriminator_a
+        outputs, features, images = discriminator(images)
+        return outputs, features
