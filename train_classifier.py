@@ -385,7 +385,7 @@ def train_notused(model, train_loader, val_loader, epochs, device):
             print('Epoch : {}, val_accuracy : {}, val_loss : {}'.format(epoch + 1, epoch_val_accuracy, epoch_val_loss))
 
 
-def after_epoch(epoch, path, train_loss, train_acc, val_loss, val_acc, model, val_loader, classes, batch_size):
+def after_epoch(epoch, path, train_loss, train_acc, val_loss, val_acc, model, val_loader, classes, batch_size, device):
     def plot_loss(epoch, path='logs'):
         fig = plt.figure(figsize=(16, 9))
         plt.title("Train - Validation Loss")
@@ -429,6 +429,7 @@ def after_epoch(epoch, path, train_loss, train_acc, val_loss, val_acc, model, va
             for ax, image, label in zip(axis.flat, images, labels):
                 ax.imshow(img_display(image))  # add image
                 image_tensor = image.unsqueeze_(0)
+                image_tensor = image_tensor.to(device)  # on GPU
                 output_ = model(image_tensor)
                 output_ = output_.argmax()
                 k = output_.item() == label.item()
@@ -528,7 +529,7 @@ def train(model, device, epochs, train_loader, val_loader, classes, batch_size, 
             accuracy = 100 * float(correct_count) / total_pred[classname]
             print(f'Val Accuracy for class: {classname:5s} is {accuracy:.1f} %')
 
-        after_epoch(epoch, log_dir, train_loss, train_acc, val_loss, val_acc, model, val_loader, classes, batch_size)
+        after_epoch(epoch, log_dir, train_loss, train_acc, val_loss, val_acc, model, val_loader, classes, batch_size, device)
         model.train()
 
 
