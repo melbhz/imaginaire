@@ -280,9 +280,10 @@ class ClassifierTrainer():
             accuracy = 100 * float(correct_count) / total_pred[classname]
             print(f'Val Accuracy for class: {classname:5s} is {accuracy:.1f} %')
 
-    def start_of_epoch(self):
+    def start_of_epoch(self, current_epoch):
+        self.current_epoch = current_epoch
         self.start_epoch_time = time.time()
-        print(f'\n Epoch: {self.current_epoch}')
+        print(f'Epoch: {self.current_epoch}')
 
     def end_of_epoch(self):
         self.scheduler.step()
@@ -584,7 +585,7 @@ def main():
     # Start training.
     for epoch in range(current_epoch, args.n_epochs):
         print('Epoch {} ...'.format(epoch))
-        trainer.start_of_epoch()
+        trainer.start_of_epoch(epoch)
         trainer.net_update()
         trainer.end_of_epoch()
     print('Done with training!!!')
