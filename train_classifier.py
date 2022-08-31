@@ -368,7 +368,7 @@ class ClassifierTrainer():
             import math
             ncols = 8  # math.ceil(batch_size / 4)
             nrows = math.ceil(self.cfg.data.train.batch_size / ncols)
-            fig, axis = plt.subplots(nrows, ncols, figsize=(25, 20))
+            fig, axis = plt.subplots(nrows, ncols, figsize=(25, 22))
             with torch.no_grad():
                 self.model.eval()
                 for ax, image, label in zip(axis.flat, images, labels):
@@ -378,8 +378,10 @@ class ClassifierTrainer():
                     output_ = self.model(image_tensor)
                     output_ = output_.argmax()
                     k = output_.item() == label.item()
+                    ax.axis('off')
                     ax.set_title(str(self.classes[label.item()]) + ": " + str(k))
 
+            fig.suptitle(f'Sample predictions accuracy for validation dataset (True for Correct)', fontsize=24)
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample.png'),
                         bbox_inches='tight')
@@ -401,13 +403,10 @@ class ClassifierTrainer():
                     # {0: 'Dog', 1: 'Cat'}
                     preds_list = F.softmax(preds, dim=1)[:, 1].tolist()
                     cat_probs += list(zip(list(labels.tolist()), preds_list, filepaths))
-
             cat_probs.sort(key=lambda x: x[1])  # sort by cat confidence
-
             idx = list(map(lambda x: x[0], cat_probs))
             prob = list(map(lambda x: x[1], cat_probs))
             filepath = list(map(lambda x: x[2], cat_probs))
-
             submission = pd.DataFrame({'label': idx, 'probability': prob, 'file': filepath})
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_results.csv')))
             submission.to_csv(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_results.csv'), index=False)
@@ -425,30 +424,32 @@ class ClassifierTrainer():
                     label = 1
                 else:
                     label = 0
-
                 img_path = i
                 img = Image.open(img_path)
                 ax.set_title(self.classes[label])
+                ax.axis('off')
                 ax.imshow(img)
+            fig.suptitle(f'Sample predictions for validation dataset', fontsize=24)
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_samples.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_samples.png'),
                         bbox_inches='tight')
 
-        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=40, heigt=50):
+        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=30, heigt=32):
             n_imgs = nrows * ncols
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=False)
             heads = df_sort.head(n_imgs)
             tails = df_sort.tail(n_imgs)
             mids = df_sort.loc[(df_sort.probability - 0.5).abs().argsort()].head(n_imgs)
-            for df, pos in zip([heads, tails, mids], ['heads', 'tails', 'mids']):
+            for df, pos in zip([heads, tails, mids], ['Head', 'Tail', 'Middle']):
                 fig, axis = plt.subplots(nrows, ncols, figsize=(width, heigt))
                 for ax, img_path, probability, label in zip(axis.flat, df['file'].to_list(),
                                                             df['probability'].to_list(), df['label'].to_list()):
                     img = Image.open(img_path)
                     ax.imshow(img)
                     title = f'prob_of_{self.classes[1]}:{probability:.2f}-Truth:{self.classes[label]}'
+                    ax.axis('off')
                     ax.set_title(title)
-                fig.suptitle(f'{pos} images for prediction confidence of {self.classes[1]}')  # , fontsize=16)
+                fig.suptitle(f'{pos} images for prediction confidence of {self.classes[1]}', fontsize=24)
                 print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png')))
                 fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png'),
                             bbox_inches='tight')
