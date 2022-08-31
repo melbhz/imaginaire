@@ -441,7 +441,7 @@ class ClassifierTrainer():
                     title = f'prob_of_{self.classes[1]}:{probability:.2f}-Truth:{self.classes[label]}'
                     ax.set_title(title)
                 fig.suptitle(f'{pos} images for prediction confidence of {self.classes[1]}')  # , fontsize=16)
-                print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample.png')))
+                print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png')))
                 fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png'),
                             bbox_inches='tight')
 
