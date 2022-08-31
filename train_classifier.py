@@ -1,8 +1,3 @@
-# !/usr/bin/env python
-# coding: utf-8
-
-import matplotlib.pyplot as plt
-
 import os
 import glob
 import numpy as np
@@ -25,6 +20,7 @@ import random
 import collections
 
 from imaginaire.config import Config
+import matplotlib.pyplot as plt
 
 '''
 reference:
