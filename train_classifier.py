@@ -434,7 +434,7 @@ class ClassifierTrainer():
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample5.png'),
                         bbox_inches='tight')
 
-        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=16, heigt=15):
+        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=15.2):
             n_imgs = nrows * ncols
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=False)
             heads = df_sort.head(n_imgs)
@@ -454,7 +454,7 @@ class ClassifierTrainer():
                     title = f'{probability:.2f} | {self.classes[label]}'
                     ax.axis('off')
                     ax.set_title(title)
-                fig.suptitle(f'{pos} images for probability of {self.classes[1]} (Probability | Truth)', fontsize=20)
+                fig.suptitle(f'{pos} images for probability of {self.classes[1]} (Probability | Truth)', fontsize=16)
                 print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png')))
                 fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png'),
                             bbox_inches='tight')
