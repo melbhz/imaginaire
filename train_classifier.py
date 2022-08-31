@@ -131,7 +131,7 @@ class ClassifierTrainer():
         self.is_inference = train_loader is None
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f'device: {self.device}')
-        self.model = self.model.to(self.model)
+        self.model = self.model.to(self.device)
 
         self.criterion = nn.CrossEntropyLoss()
         self.print_every = 100
