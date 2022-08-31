@@ -207,8 +207,8 @@ class ClassifierTrainer():
         running_loss = 0.0
         correct = 0
         total = 0
-        # correct_prediction = {classname: 0 for classname in self.classes}
-        # total_prediction = {classname: 0 for classname in self.classes}
+        correct_prediction = {classname: 0 for classname in self.classes}
+        total_prediction = {classname: 0 for classname in self.classes}
         self.model.train()
         for i, data in enumerate(self.train_loader):
             self.current_iteration = i
@@ -224,10 +224,10 @@ class ClassifierTrainer():
             _, pred = torch.max(outputs, dim=1)
             correct += torch.sum(pred == labels).item()
             total += labels.size(0)
-            # for label, prediction in zip(labels, pred):
-            #     if label == prediction:
-            #         correct_prediction[self.classes[label.item()]] += 1
-            #     total_prediction[self.classes[label.item()]] += 1
+            for label, prediction in zip(labels, pred):
+                if label == prediction:
+                    correct_prediction[self.classes[label.item()]] += 1
+                total_prediction[self.classes[label.item()]] += 1
             if (self.current_iteration) % self.print_every == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(self.current_epoch, self.n_epochs,
                                                                          self.current_iteration, self.total_step,
@@ -236,10 +236,10 @@ class ClassifierTrainer():
         self.train_acc.append(100 * correct / total)
         self.train_loss.append(running_loss / self.total_step)
         print(f'\ntrain loss: {np.mean(self.train_loss):.4f}, train acc: {(100 * correct / total):.4f}')
-        # # print accuracy for each class
-        # for classname, correct_count in correct_prediction.items():
-        #     accuracy = 100 * float(correct_count) / total_prediction[classname]
-        #     print(f'Train Accuracy for class: {classname:5s} is {accuracy:.1f} %')
+        # print accuracy for each class
+        for classname, correct_count in correct_prediction.items():
+            accuracy = 100 * float(correct_count) / total_prediction[classname]
+            print(f'Train Accuracy for class: {classname:5s} is {accuracy:.1f} %')
 
         # For Val
         batch_loss = 0
@@ -378,7 +378,7 @@ class ClassifierTrainer():
         plot_loss()
         plot_accuracy()
         plot_sample()
-        print('Save output graphs and sample images to {}'.format(self.cfg.logdir))
+        # print('Save output graphs and sample images to {}'.format(self.cfg.logdir))
 
     # ## 4. Test Model
 
@@ -441,6 +441,7 @@ class ClassifierTrainer():
                     title = f'prob_of_{self.classes[1]}:{probability:.2f}-Truth:{self.classes[label]}'
                     ax.set_title(title)
                 fig.suptitle(f'{pos} images for prediction confidence of {self.classes[1]}')  # , fontsize=16)
+                print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample.png')))
                 fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample.png'),
                             bbox_inches='tight')
 
