@@ -434,7 +434,7 @@ class ClassifierTrainer():
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample5.png'),
                         bbox_inches='tight')
 
-        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=15.2):
+        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=15.8):
             n_imgs = nrows * ncols
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=False)
             heads = df_sort.head(n_imgs)
