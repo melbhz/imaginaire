@@ -360,7 +360,7 @@ class ClassifierTrainer():
             import math
             ncols = 8  # math.ceil(batch_size / 4)
             nrows = math.ceil(self.cfg.data.train.batch_size / ncols)
-            fig, axis = plt.subplots(nrows, ncols, figsize=(12, 14))
+            fig, axis = plt.subplots(nrows, ncols, figsize=(25, 20))
             with torch.no_grad():
                 self.model.eval()
                 for ax, image, label in zip(axis.flat, images, labels):
@@ -409,7 +409,7 @@ class ClassifierTrainer():
             import random
             id_list = []
             # classes = {0: 'dog', 1: 'cat'}
-            fig, axes = plt.subplots(2, 5, figsize=(20, 12), facecolor='w')
+            fig, axes = plt.subplots(3, 5, figsize=(20, 15), facecolor='w')
             for ax in axes.ravel():
                 i = random.choice(submission['file'].values)
                 label = submission.loc[submission['file'] == i, 'probability'].values[0]
@@ -426,14 +426,14 @@ class ClassifierTrainer():
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_samples.png'),
                         bbox_inches='tight')
 
-        def vis_head_mid_tail(submission, ncols=10, nrows=10):  # , width=20, heigt=22):
+        def vis_head_mid_tail(submission, ncols=10, nrows=10 , width=40, heigt=50):
             n_imgs = nrows * ncols
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=False)
             heads = df_sort.head(n_imgs)
             tails = df_sort.tail(n_imgs)
             mids = df_sort.loc[(df_sort.probability - 0.5).abs().argsort()].head(n_imgs)
             for df, pos in zip([heads, tails, mids], ['heads', 'tails', 'mids']):
-                fig, axis = plt.subplots(nrows, ncols)  # , figsize=(width, heigt))
+                fig, axis = plt.subplots(nrows, ncols, figsize=(width, heigt))
                 for ax, img_path, probability, label in zip(axis.flat, df['file'].to_list(),
                                                             df['probability'].to_list(), df['label'].to_list()):
                     img = Image.open(img_path)
