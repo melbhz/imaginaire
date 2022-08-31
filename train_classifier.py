@@ -225,8 +225,8 @@ class ClassifierTrainer():
             total += labels.size(0)
             for label, prediction in zip(labels, pred):
                 if label == prediction:
-                    correct_prediction[self.classes[label]] += 1
-                total_prediction[self.classes[label]] += 1
+                    correct_prediction[self.classes[label.item()]] += 1
+                total_prediction[self.classes[label.item()]] += 1
             if (self.current_iteration) % self.print_every == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(self.current_epoch, self.n_epochs,
                                                                          self.current_iteration, self.total_step,
