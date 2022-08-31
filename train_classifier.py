@@ -246,6 +246,7 @@ class ClassifierTrainer():
         correct_t = 0
         correct_pred = {classname: 0 for classname in self.classes}
         total_pred = {classname: 0 for classname in self.classes}
+        print(f'correct_pred: {correct_pred}\n total_pred: {total_pred}')
         with torch.no_grad():
             self.model.eval()
             for data_t, target_t, _ in self.val_loader:
@@ -259,8 +260,8 @@ class ClassifierTrainer():
                 total_t += target_t.size(0)
                 for label, prediction in zip(target_t, pred_t):
                     if label == prediction:
-                        correct_pred[self.classes[label]] += 1
-                    total_pred[self.classes[label]] += 1
+                        correct_pred[self.classes[label.item()]] += 1
+                    total_pred[self.classes[label.item()]] += 1
 
             self.val_acc.append(100 * correct_t / total_t)
             self.val_loss.append(batch_loss / len(self.val_loader))
