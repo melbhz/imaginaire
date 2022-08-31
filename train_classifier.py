@@ -143,7 +143,8 @@ class ClassifierTrainer():
 
         self.total_step = len(self.train_loader)
         self.n_epochs = n_epochs
-        self.classes = {0: 'Dog', 1: 'Cat'}
+        # self.classes = {0: 'Dog', 1: 'Cat'}
+        self.classes = ('Dog', 'Cat')
 
         # Initialize logging attributes.
         self.current_iteration = 0
