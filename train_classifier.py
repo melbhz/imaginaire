@@ -368,7 +368,7 @@ class ClassifierTrainer():
             import math
             ncols = 8  # math.ceil(batch_size / 4)
             nrows = math.ceil(self.cfg.data.train.batch_size / ncols)
-            fig, axis = plt.subplots(nrows, ncols, figsize=(ncols*1.1, nrows*1.1))
+            fig, axis = plt.subplots(nrows, ncols, figsize=(ncols*1.1, nrows*1.2))
             with torch.no_grad():
                 self.model.eval()
                 for ax, image, label in zip(axis.flat, images, labels):
@@ -379,7 +379,7 @@ class ClassifierTrainer():
                     output_ = output_.argmax()
                     k = output_.item() == label.item()
                     ax.axis('off')
-                    ax.set_title(str(self.classes[label.item()]) + ": " + str(k), fontsize=10)
+                    ax.set_title(str(self.classes[label.item()]) + ": " + str(k), fontsize=6)
 
             fig.suptitle(f'Sample predictions accuracy for validation dataset (True for Correct)', fontsize=12)
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample8.png')))
@@ -434,7 +434,7 @@ class ClassifierTrainer():
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample5.png'),
                         bbox_inches='tight')
 
-        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=15.5):
+        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=15.2):
             n_imgs = nrows * ncols
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=False)
             heads = df_sort.head(n_imgs)
@@ -442,7 +442,7 @@ class ClassifierTrainer():
             mids = df_sort.loc[(df_sort.probability - 0.5).abs().argsort()].head(n_imgs)
             print('1', mids.head(10))
             df_sort['close_to_mid'] = (df_sort.probability - 0.5).abs()
-            mids = df_sort.sort_values(by=['close_to_mid'], inplace=False, ascending=False).head(n_imgs)
+            mids = df_sort.sort_values(by=['close_to_mid'], inplace=False, ascending=True).head(n_imgs)
             print('2', mids.head(10))
 
             for df, pos in zip([heads, tails, mids], ['Head', 'Tail', 'Middle']):
