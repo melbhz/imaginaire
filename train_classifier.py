@@ -236,7 +236,7 @@ class ClassifierTrainer():
                 if label == prediction:
                     correct_prediction[self.classes[label.item()]] += 1
                 total_prediction[self.classes[label.item()]] += 1
-            if (self.current_iteration) % self.print_every == 0:
+            if (self.current_iteration) % self.print_every == 0 or self.current_iteration == self.total_step - 1:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'.format(self.current_epoch, self.n_epochs,
                                                                          self.current_iteration, self.total_step,
                                                                          loss.item()))
@@ -379,9 +379,9 @@ class ClassifierTrainer():
                     output_ = output_.argmax()
                     k = output_.item() == label.item()
                     ax.axis('off')
-                    ax.set_title(str(self.classes[label.item()]) + ": " + str(k))
+                    ax.set_title(str(self.classes[label.item()]) + ": " + str(k), fontsize=10)
 
-            fig.suptitle(f'Sample predictions accuracy for validation dataset (True for Correct)', fontsize=18)
+            fig.suptitle(f'Sample predictions accuracy for validation dataset (True for Correct)', fontsize=12)
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample8.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample8.png'),
                         bbox_inches='tight')
@@ -434,12 +434,17 @@ class ClassifierTrainer():
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample5.png'),
                         bbox_inches='tight')
 
-        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=16):
+        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=15.5):
             n_imgs = nrows * ncols
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=False)
             heads = df_sort.head(n_imgs)
             tails = df_sort.tail(n_imgs)
             mids = df_sort.loc[(df_sort.probability - 0.5).abs().argsort()].head(n_imgs)
+            print('1', mids.head(10))
+            df_sort['close_to_mid'] = (df_sort.probability - 0.5).abs()
+            mids = df_sort.sort_values(by=['close_to_mid'], inplace=False, ascending=False).head(n_imgs)
+            print('2', mids.head(10))
+
             for df, pos in zip([heads, tails, mids], ['Head', 'Tail', 'Middle']):
                 fig, axis = plt.subplots(nrows, ncols, figsize=(width, heigt))
                 for ax, img_path, probability, label in zip(axis.flat, df['file'].to_list(),
@@ -449,7 +454,7 @@ class ClassifierTrainer():
                     title = f'{probability:.2f} | {self.classes[label]}'
                     ax.axis('off')
                     ax.set_title(title)
-                fig.suptitle(f'{pos} images for probability of {self.classes[1]} (probability | Truth)', fontsize=22)
+                fig.suptitle(f'{pos} images for probability of {self.classes[1]} (Probability | Truth)', fontsize=20)
                 print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png')))
                 fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png'),
                             bbox_inches='tight')
