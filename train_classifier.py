@@ -247,7 +247,7 @@ class ClassifierTrainer():
         correct_t = 0
         correct_pred = {classname: 0 for classname in self.classes}
         total_pred = {classname: 0 for classname in self.classes}
-        print(f'correct_pred: {correct_pred}\n total_pred: {total_pred}')
+        # print(f'correct_pred: {correct_pred}\n total_pred: {total_pred}')
         with torch.no_grad():
             self.model.eval()
             for data_t, target_t, _ in self.val_loader:
@@ -381,7 +381,6 @@ class ClassifierTrainer():
         # print('Save output graphs and sample images to {}'.format(self.cfg.logdir))
 
     # ## 4. Test Model
-
     def save_report_and_sample_vis(self):
         def save_report(test_loader=self.val_loader):
             cat_probs = []
