@@ -304,9 +304,9 @@ class ClassifierTrainer():
             dataiter = iter(self.train_loader)
             images, labels, _ = dataiter.next()
             plt.imshow(img_display(torchvision.utils.make_grid(images)))
-            plt.show()
+            # plt.show()
             # print labels
-            print(' '.join(f'{self.classes[labels[j]]:5s}' for j in range(self.cfg.batch_size)))
+            print(' '.join(f'{self.classes[labels[j]]:5s}' for j in range(self.cfg.data.train.batch_size)))
 
         def vis2():
             # get some random training images
@@ -332,6 +332,7 @@ class ClassifierTrainer():
             plt.xlabel('num_epochs', fontsize=12)
             plt.ylabel('loss', fontsize=12)
             plt.legend(loc='best')
+            print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_loss.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_loss.png'), bbox_inches='tight')
 
         def plot_accuracy():
@@ -342,6 +343,7 @@ class ClassifierTrainer():
             plt.xlabel('num_epochs', fontsize=12)
             plt.ylabel('accuracy', fontsize=12)
             plt.legend(loc='best')
+            print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_accuracy.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_accuracy.png'), bbox_inches='tight')
 
         def plot_sample():
@@ -356,7 +358,7 @@ class ClassifierTrainer():
 
             import math
             ncols = 8  # math.ceil(batch_size / 4)
-            nrows = math.ceil(self.cfg.batch_size / ncols)
+            nrows = math.ceil(self.cfg.data.train.batch_size / ncols)
             fig, axis = plt.subplots(nrows, ncols, figsize=(12, 14))
             with torch.no_grad():
                 self.model.eval()
@@ -369,6 +371,7 @@ class ClassifierTrainer():
                     k = output_.item() == label.item()
                     ax.set_title(str(self.classes[label.item()]) + ": " + str(k))
 
+            print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample.png'),
                         bbox_inches='tight')
 
