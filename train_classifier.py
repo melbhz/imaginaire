@@ -248,7 +248,7 @@ class ClassifierTrainer():
         total_pred = {classname: 0 for classname in self.classes}
         with torch.no_grad():
             self.model.eval()
-            for data_t, target_t, _ in enumerate(self.val_loader):
+            for data_t, target_t, _ in self.val_loader:
                 data_t, target_t = data_t.to(self.device), target_t.to(self.device)
                 outputs_t = self.model(data_t)
                 loss_t = self.criterion(outputs_t, target_t)
