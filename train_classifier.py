@@ -164,8 +164,8 @@ class ClassifierTrainer():
             if resume:
                 self.model.load_state_dict(checkpoint['model'], strict=False)
                 if not self.is_inference:
-                    self.optimizer.load_state_dict(checkpoint['optimizer'], strict=False)
-                    self.scheduler.load_state_dict(checkpoint['scheduler'], strict=False)
+                    self.optimizer.load_state_dict(checkpoint['optimizer'])
+                    self.scheduler.load_state_dict(checkpoint['scheduler'])
                     self.current_epoch = checkpoint['current_epoch']
                     current_epoch = self.current_epoch
             else:
