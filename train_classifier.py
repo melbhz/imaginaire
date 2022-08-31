@@ -379,7 +379,7 @@ class ClassifierTrainer():
                     output_ = output_.argmax()
                     k = output_.item() == label.item()
                     ax.axis('off')
-                    ax.set_title(str(self.classes[label.item()]) + ": " + str(k), fontsize=8)
+                    ax.set_title(str(self.classes[label.item()]) + ": " + str(k), fontsize=9)
 
             fig.suptitle(f'Sample predictions accuracy for validation dataset (True for Correct)', fontsize=12)
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample8.png')))
@@ -434,12 +434,12 @@ class ClassifierTrainer():
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample5.png'),
                         bbox_inches='tight')
 
-        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=15):
+        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=16, heigt=15):
             n_imgs = nrows * ncols
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=False)
             heads = df_sort.head(n_imgs)
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=True)
-            tails = df_sort.tail(n_imgs)
+            tails = df_sort.head(n_imgs)
             # mids = df_sort.loc[(df_sort.probability - 0.5).abs().argsort()].head(n_imgs)
             df_sort['close_to_mid'] = (df_sort.probability - 0.5).abs()
             mids = df_sort.sort_values(by=['close_to_mid'], inplace=False, ascending=True).head(n_imgs)
