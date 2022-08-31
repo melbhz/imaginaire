@@ -368,7 +368,7 @@ class ClassifierTrainer():
             import math
             ncols = 8  # math.ceil(batch_size / 4)
             nrows = math.ceil(self.cfg.data.train.batch_size / ncols)
-            fig, axis = plt.subplots(nrows, ncols, figsize=(10, 10))
+            fig, axis = plt.subplots(nrows, ncols, figsize=(ncols*1.1, nrows*1.1))
             with torch.no_grad():
                 self.model.eval()
                 for ax, image, label in zip(axis.flat, images, labels):
@@ -381,9 +381,9 @@ class ClassifierTrainer():
                     ax.axis('off')
                     ax.set_title(str(self.classes[label.item()]) + ": " + str(k))
 
-            fig.suptitle(f'Sample predictions accuracy for validation dataset (True for Correct)', fontsize=24)
-            print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample.png')))
-            fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample.png'),
+            fig.suptitle(f'Sample predictions accuracy for validation dataset (True for Correct)', fontsize=18)
+            print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample8.png')))
+            fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample8.png'),
                         bbox_inches='tight')
 
         plot_loss()
@@ -416,7 +416,7 @@ class ClassifierTrainer():
             import random
             id_list = []
             # classes = {0: 'dog', 1: 'cat'}
-            fig, axes = plt.subplots(3, 5, figsize=(10, 5), facecolor='w')
+            fig, axes = plt.subplots(3, 5, figsize=(10, 6), facecolor='w')
             for ax in axes.ravel():
                 i = random.choice(submission['file'].values)
                 label = submission.loc[submission['file'] == i, 'probability'].values[0]
@@ -429,9 +429,9 @@ class ClassifierTrainer():
                 ax.set_title(self.classes[label])
                 ax.axis('off')
                 ax.imshow(img)
-            fig.suptitle(f'Sample predictions for validation dataset', fontsize=24)
-            print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_samples.png')))
-            fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_samples.png'),
+            fig.suptitle(f'Sample predictions for validation dataset', fontsize=16)
+            print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample5.png')))
+            fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample5.png'),
                         bbox_inches='tight')
 
         def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=16):
@@ -446,10 +446,10 @@ class ClassifierTrainer():
                                                             df['probability'].to_list(), df['label'].to_list()):
                     img = Image.open(img_path)
                     ax.imshow(img)
-                    title = f'prob_of_{self.classes[1]}:{probability:.2f}-Truth:{self.classes[label]}'
+                    title = f'{probability:.2f} | {self.classes[label]}'
                     ax.axis('off')
                     ax.set_title(title)
-                fig.suptitle(f'{pos} images for prediction confidence of {self.classes[1]}', fontsize=24)
+                fig.suptitle(f'{pos} images for probability of {self.classes[1]} (probability | Truth)', fontsize=22)
                 print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png')))
                 fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png'),
                             bbox_inches='tight')
