@@ -167,6 +167,10 @@ class ClassifierTrainer():
                     self.optimizer.load_state_dict(checkpoint['optimizer'])
                     self.scheduler.load_state_dict(checkpoint['scheduler'])
                     self.current_epoch = checkpoint['current_epoch']
+                    self.train_loss = checkpoint['train_loss']
+                    self.train_acc = checkpoint['train_acc']
+                    self.val_loss = checkpoint['val_loss']
+                    self.val_acc = checkpoint['val_acc']
                     current_epoch = self.current_epoch
             else:
                 try:
@@ -192,7 +196,11 @@ class ClassifierTrainer():
                 'model': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
                 'scheduler': self.scheduler.state_dict(),
-                'current_epoch': self.current_epoch
+                'current_epoch': self.current_epoch,
+                'train_loss': self.train_loss,
+                'train_acc': self.train_acc,
+                'val_loss': self.val_loss,
+                'val_acc': self.val_acc
             },
             save_path,
         )
@@ -426,7 +434,7 @@ class ClassifierTrainer():
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_samples.png'),
                         bbox_inches='tight')
 
-        def vis_head_mid_tail(submission, ncols=10, nrows=10 , width=40, heigt=50):
+        def vis_head_mid_tail(submission, ncols=10, nrows=10, width=40, heigt=50):
             n_imgs = nrows * ncols
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=False)
             heads = df_sort.head(n_imgs)
