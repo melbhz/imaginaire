@@ -574,12 +574,17 @@ def parse_args():
     return args
 
 
-def main():
+def main(redirect_stdout=True):
     args = parse_args()
     set_random_seed(args.seed)
     cfg = Config(args.config)
     cfg.date_uid, cfg.logdir = init_logging(args.config, args.logdir)
     make_logging_dir(cfg.logdir)
+    if redirect_stdout:
+        log_file = os.path.join(cfg.logdir, 'logging.txt')
+        print(f'main: redirecting sys.stdout to file {log_file}')
+        Origin_Stdout = sys.stdout
+        sys.stdout = open(log_file, "a")
 
     # Initialize data loaders and models.
     cfg.data.train.batch_size = cfg.data.train.batch_size * args.batch_size_multiplier
@@ -600,8 +605,14 @@ def main():
         trainer.net_update()
         trainer.end_of_epoch()
     print('Done with training!!!')
+
+    if redirect_stdout:
+        sys.stdout.close()
+        sys.stdout = Origin_Stdout
+        print("sys.stdout recovered.")
+
     return
 
 
 if __name__ == "__main__":
-    main()
+    main(redirect_stdout=True)
