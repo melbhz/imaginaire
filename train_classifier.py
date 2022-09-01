@@ -21,6 +21,7 @@ import collections
 
 from imaginaire.config import Config
 import matplotlib.pyplot as plt
+import sys
 
 '''
 reference:
@@ -603,4 +604,13 @@ def main():
 
 
 if __name__ == "__main__":
+    # main()
+    print('main: before redirect 1/4')
+    Origin_Out = sys.stdout
+    sys.stdout = open("test.txt", "a")
+    print('main: in redirect 2/4')
     main()
+    print('main: after main 3/4')
+    sys.stdout.close()
+    sys.stdout = Origin_Out
+    print("main: back to stdout 4/4")
