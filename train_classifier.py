@@ -574,7 +574,7 @@ def parse_args():
     return args
 
 
-def main(redirect_stdout=True):
+def main(redirect_stdout=False):
     args = parse_args()
     set_random_seed(args.seed)
     cfg = Config(args.config)
@@ -604,6 +604,9 @@ def main(redirect_stdout=True):
         trainer.start_of_epoch(epoch)
         trainer.net_update()
         trainer.end_of_epoch()
+        if redirect_stdout:
+            sys.stdout.close()
+            sys.stdout = open(log_file, "a")
     print('Done with training!!!')
 
     if redirect_stdout:
