@@ -376,7 +376,9 @@ class ClassifierTrainer():
                     output_ = output_.argmax()
                     k = output_.item() == label.item()
                     ax.axis('off')
-                    ax.set_title(str(self.classes[label.item()]) + ": " + str(k), fontsize=9)
+                    colour = {True: 'tab:blue', False: 'tab:orange'}
+                    #'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'
+                    ax.set_title(str(self.classes[label.item()]) + ": " + str(k), fontsize=9, color=colour[k])
 
             fig.suptitle(f'Sample predictions accuracy for validation dataset (True for Correct)', fontsize=12)
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample8.png')))
