@@ -149,7 +149,7 @@ class ClassifierTrainer():
         self.start_epoch_time = None
         self.time_epoch = None
 
-    def load_checkpoint(self, cfg, checkpoint_path, resume=None, load_sch=True):
+    def load_checkpoint(self, cfg=None, checkpoint_path=None, resume=None, load_sch=True):
         if os.path.exists(checkpoint_path):
             if resume is None:
                 resume = False
@@ -377,7 +377,7 @@ class ClassifierTrainer():
                     k = output_.item() == label.item()
                     ax.axis('off')
                     colour = {True: 'tab:blue', False: 'tab:orange'}
-                    #'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'
+                    # 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'
                     ax.set_title(str(self.classes[label.item()]) + ": " + str(k), fontsize=9, color=colour[k])
 
             fig.suptitle(f'Sample predictions accuracy for validation dataset (True for Correct)', fontsize=12)
@@ -461,6 +461,47 @@ class ClassifierTrainer():
         submission = save_report(self.val_loader)
         vis_report_sample(submission)
         vis_head_mid_tail(submission)
+
+    def inference(self, images):
+        self.model.eval()
+        with torch.no_grad():
+            images = images.to(self.device)
+            preds = self.model(images)
+            # {0: 'Dog', 1: 'Cat'}
+            preds_list = F.softmax(preds, dim=1)[:, 1].tolist()
+        return preds_list
+
+    def inference_one_image(self, image):
+        self.model.eval()
+        with torch.no_grad():
+            image_tensor = image.unsqueeze_(0)
+            image_tensor = image_tensor.to(self.device)
+            preds = self.model(image_tensor)
+            # {0: 'Dog', 1: 'Cat'}
+            preds_list = F.softmax(preds, dim=1)[:, 1].tolist()
+        assert len(preds_list) == 1, 'Error: found not len(preds_list) == 1!'
+        return preds_list[0]
+
+    def get_transform(self, normalize=True, num_channels=3):
+        r"""Convert numpy to torch tensor.
+
+        Args:
+            normalize (bool): Normalize image i.e. (x - 0.5) * 2.
+                Goes from [0, 1] -> [-1, 1].
+        Returns:
+            Composed list of torch transforms.
+        """
+        transform_list = [transforms.ToTensor()]
+        if normalize:
+            transform_list.append(
+                transforms.Normalize((0.5,) * num_channels,
+                                     (0.5,) * num_channels, inplace=True))
+        return transforms.Compose(transform_list)
+
+    def tranform_image(self, image):
+        transform_norm = self.get_transform(normalize=True, num_channels=3)
+        img_normalized = transform_norm(image)
+        return img_normalized
 
 
 # Some utility functions

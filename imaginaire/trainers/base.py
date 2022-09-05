@@ -6,6 +6,7 @@ import json
 import os
 import time
 
+import pandas as pd
 import torch
 import torchvision
 import wandb
@@ -1637,6 +1638,222 @@ class BaseTrainer(object):
                     output_image = tensor2pilimage(output_image.clamp_(-1, 1),
                                                    minus1to1_normalized=True)
                     save_pilimage_in_jpeg(fullname, output_image)
+        print("Debug Done, return.")
+        return
+
+        if debugging:
+            print(f'contents.size(): {contents.size()}')
+            print(f'len(content_list): {len(content_list)}')
+            print(f'len(content_dict): {len(content_dict)}')
+            print(f'styles.size(): {styles.size()}')
+            print(f'len(style_list): {len(style_list)}')
+            print(f'len(style_dict): {len(style_dict)}')
+
+            print(f'last content.size(): {content.size()}')
+            print(f'last style.size(): {style.size()}')
+
+            # import numpy as np
+        content_data = {}
+        style_data = {}
+
+        # content_data['data'] = contents.detach().cpu().squeeze().numpy()
+        style_data['data'] = styles.detach().cpu().squeeze().numpy()
+
+        # content_data['filename'] = np.asarray(content_fname_list)
+        style_data['filename'] = np.asarray(style_fname_list)
+
+        # content_data['dirname'] = content_dirname
+        style_data['dirname'] = style_dirname
+
+        # content_data['a2b'] = dict_inference_args["a2b"]
+        style_data['a2b'] = dict_inference_args["a2b"]
+
+        # contents_pkl = os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}_contents.pkl')
+        styles_pkl = os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}_styles.pkl')
+
+        if debugging:
+            print(f'content_data["data"].shape: {content_data["data"].shape}')
+            print(f'content_data["dirname"]: {content_data["dirname"]}')
+            print(f'content_data["filename"].shape: {content_data["filename"].shape}')
+            print(f'style_data["data"].shape: {style_data["data"].shape}')
+            print(f'style_data["dirname"]: {style_data["dirname"]}')
+            print(f'style_data["filename"].shape: {style_data["filename"].shape}')
+
+        # print('Saving content and style codes to {} and\n {}'.format(contents_pkl, styles_pkl))
+        print(f'Saving style codes to {styles_pkl}')
+
+        import pickle
+        '''
+        with open(contents_pkl, 'wb') as f:
+            pickle.dump(content_data, f)
+        '''
+        with open(styles_pkl, 'wb') as f:
+            pickle.dump(style_data, f)
+        '''
+        with open(contents_pkl, 'rb') as f:
+            content_data = pickle.load(f)
+        with open(styles_pkl, 'rb') as f:
+            style_data = pickle.load(f)
+
+        path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
+        '''
+
+
+    def test_tsne_one_image_classifier(self, data_loader, output_dir, tsne_one_image_id, classifier, inference_args):
+        if self.cfg.trainer.model_average_config.enabled:
+            net_G = self.net_G.module.averaged_model
+        else:
+            net_G = self.net_G.module
+        net_G.eval()
+
+        # net_D = self.net_D.module
+        # print(f'self.net_D = :\n{self.net_D} \nself.net_G = :\n{self.net_G}')
+        # return
+
+        dict_inference_args = dict(inference_args)
+        print(f"dict_inference_args: {dict_inference_args}")
+        debugging = False  # True
+        print('# of samples for getting content and style code: %d' % len(data_loader))
+
+        with torch.no_grad():
+            content_dict = {}
+            content_list = []
+            content_fname_list = []
+            style_dict = {}
+            style_list = []
+            style_fname_list = []
+        for it, data in enumerate(tqdm(data_loader)):
+            data = self.start_of_iteration(data, current_iteration=-1)
+            with torch.no_grad():
+                # style_tensors, style_filenames, style_dirname = net_G.get_style_code(data, **vars(inference_args))
+                content, content_filenames, content_dirname, style, style_filenames, style_dirname = net_G.get_content_and_style_code(
+                    data, **vars(inference_args))
+
+                for cont, fn in zip(content, content_filenames):
+                    if fn not in content_dict:
+                        content_dict[fn] = cont
+                        content_list.append(cont)
+                        content_fname_list.append(fn)
+
+                for st, fn in zip(style, style_filenames):
+                    if fn not in style_dict:
+                        style_dict[fn] = st
+                        style_list.append(st)
+                        style_fname_list.append(fn)
+
+        # contents = torch.cat([x.unsqueeze(0) for x in content_list], 0)
+        styles = torch.cat([x.unsqueeze(0) for x in style_list], 0)
+
+        import numpy as np
+        import shutil
+
+        # if not os.path.isdir(output_dir):
+        #     os.makedirs(output_dir)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+        # content = contents[tsne_one_image_id].unsqueeze(0)
+        content = content_list[tsne_one_image_id].unsqueeze(0)
+        content_fn = content_fname_list[tsne_one_image_id]
+        print(f'The one image to translate is {content_fname_list[tsne_one_image_id]}')
+        content_image_src = os.path.join(content_dirname, f'{content_fname_list[tsne_one_image_id]}.jpg')
+        content_image_copy = os.path.join(output_dir,
+                                          f'../image_{tsne_one_image_id}_a2b_{dict_inference_args["a2b"]}.jpg')
+        print(f'Make a copy of content image from {content_image_src} to \n {content_image_copy}')
+        shutil.copyfile(content_image_src, content_image_copy)
+
+        print(f'Translating one image id {tsne_one_image_id} for all styles...')
+
+        fn_lst = []
+        dis_lst = []
+        cls_lst = []
+        img_lst = []
+        clscheck_lst = []
+        for file_names, style in tqdm(style_dict.items()):  # zip(styles, style_fname_list):
+            style = style.unsqueeze(0)
+            # for style, file_names in zip(styles, style_fname_list):
+            with torch.no_grad():
+                output_images = net_G.inference_tensor(content, style, **vars(inference_args))
+                file_names = np.atleast_1d(file_names)
+                discriminator_outputs, _ = self.net_D.module.inference(output_images, **vars(inference_args))
+                # print(f'discriminator_outputs: \n{discriminator_outputs}')
+                # continue
+                classifier_outputs = classifier.inference(output_images)
+            assert len(output_images) == 1 and len(file_names) == 1 and len(discriminator_outputs) == 1 and len(classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(discriminator_outputs) == 1 and len(classifier_outputs) == 1'
+            for output_image, file_name, disc_score, cls_score in zip(output_images, file_names, discriminator_outputs, classifier_outputs):
+                fn_lst.append(file_name)
+                dis_lst.append(disc_score.item())
+                cls_lst.append(cls_score.item())
+
+                output_image = tensor2pilimage(output_image.clamp_(-1, 1), minus1to1_normalized=True)
+                img_lst.append(output_image)
+                img_tensor = classifier.tranform_image(output_image)
+                img_tensor = img_tensor.unsqueeze(0)
+                classifier_outputs_check = classifier.inference(img_tensor)
+                clscheck_lst.append(classifier_outputs_check[0])
+
+        # df = pd.DataFrame(list(zip(fn_lst, dis_lst, cls_lst, clscheck_lst)), columns=['fn', 'dis', 'cls', 'cls_check'])
+        df = pd.DataFrame({
+            'fn': fn_lst,
+            'dis': dis_lst,
+            'cls': cls_lst,
+            'img': img_lst,
+            'cls_check': clscheck_lst
+        })
+
+        df['cls_0'] = df['cls'] - df['cls_check']
+        print("df['cls_0'].max(), df['cls_0'].min() = {}, {}".format(df['cls_0'].max(), df['cls_0'].min()))
+
+        if dict_inference_args["a2b"]: # 0 to 1
+            df_sort = df.sort_values(by=['cls'], inplace=False, ascending=False)
+            heads_cls = df_sort.head(100)
+            df_sort = df.sort_values(by=['cls'], inplace=False, ascending=True)
+            tails_cls = df_sort.head(100)
+            df_sort['close_to_mid'] = (df_sort['cls'] - 0.5).abs()
+            mids_cls = df_sort.sort_values(by=['cls'], inplace=False, ascending=True).head(100)
+        else: # 1 to 0
+            df_sort = df.sort_values(by=['cls'], inplace=False, ascending=True)
+            heads_cls = df_sort.head(100)
+            df_sort = df.sort_values(by=['cls'], inplace=False, ascending=False)
+            tails_cls = df_sort.head(100)
+            df_sort['close_to_mid'] = (df_sort['cls'] - 0.5).abs()
+            mids_cls = df_sort.sort_values(by=['cls'], inplace=False, ascending=True).head(100)
+
+        df_sort = df.sort_values(by=['dis'], inplace=False, ascending=False)
+        heads_dis = df_sort.head(100)
+        df_sort = df.sort_values(by=['dis'], inplace=False, ascending=True)
+        tails_dis = df_sort.head(100)
+
+        ncols = 10
+        nrows = 10
+        width = 15
+        heigt = 15.8
+        import matplotlib.pyplot as plt
+        target_domain = 'B' if dict_inference_args["a2b"] else 'A'
+
+        for df, pos in zip([heads_cls, tails_cls, mids_cls], ['heads_cls', 'tails_cls', 'mids_cls']):
+            fig, axis = plt.subplots(nrows, ncols, figsize=(width, heigt))
+            for ax, fn, img, probability in zip(axis.flat, df['fn'].to_list(), df['img'].to_list(), df['cls'].to_list()):
+                ax.imshow(img)
+                title = f'{probability:.2f}' if dict_inference_args["a2b"] else f'{1-probability:.2f}'
+                ax.axis('off')
+                ax.set_title(title)
+            fig.suptitle(f'{pos} images for probability of Domain {target_domain}', fontsize=16)
+            fullname = os.path.join(output_dir, '{}_{}.jpg'.format(content_fn, pos))
+            print('saving {}'.format(fullname))
+            fig.savefig(fullname, bbox_inches='tight')
+
+        for df, pos in zip([heads_dis, tails_dis], ['heads_dis', 'tails_dis']):
+            fig, axis = plt.subplots(nrows, ncols, figsize=(width, heigt))
+            for ax, fn, img, dis in zip(axis.flat, df['fn'].to_list(), df['img'].to_list(), df['dis'].to_list()):
+                ax.imshow(img)
+                title = f'{dis:.3f}'
+                ax.axis('off')
+                ax.set_title(title)
+            fig.suptitle(f'{pos} images for realistic score', fontsize=16)
+            fullname = os.path.join(output_dir, '{}_{}.jpg'.format(content_fn, pos))
+            print('saving {}'.format(fullname))
+            fig.savefig(fullname, bbox_inches='tight')
+
         print("Debug Done, return.")
         return
 

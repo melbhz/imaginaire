@@ -42,6 +42,8 @@ def parse_args():
     parser.add_argument('--tsne_one_image', action='store_true')
     parser.add_argument('--tsne_one_image_id', type=int, default=0)
     parser.add_argument('--tsne_one_image_discriminator', action='store_true')
+    parser.add_argument('--tsne_one_image_classifier', action='store_true')
+    parser.add_argument('--checkpoint_classifier', default='', help='Checkpoint path of classifier.')
     
     args = parser.parse_args()
     return args
@@ -105,6 +107,11 @@ def main():
         trainer.test_tsne_one_image(test_data_loader, args.output_dir, args.tsne_one_image_id, cfg.inference_args)
     elif args.tsne_one_image_discriminator:
         trainer.test_tsne_one_image_discriminator(test_data_loader, args.output_dir, args.tsne_one_image_id, cfg.inference_args)
+    elif args.tsne_one_image_classifier:
+        import train_classifier
+        classifier = train_classifier.ClassifierTrainer(cfg=cfg, model=train_classifier.Net())
+        classifier.load_checkpoint(checkpoint_path=args.checkpoint_classifier)
+        trainer.test_tsne_one_image_classifier(test_data_loader, args.output_dir, args.tsne_one_image_id, classifier, cfg.inference_args)
     else:
         trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only, args.all_styles, args.simple_grid, args.grid_styles, cfg.inference_args)
 
