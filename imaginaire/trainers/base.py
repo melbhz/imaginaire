@@ -1792,6 +1792,7 @@ class BaseTrainer(object):
                 clscheck_lst.append(classifier_outputs_check[0])
 
         # df = pd.DataFrame(list(zip(fn_lst, dis_lst, cls_lst, clscheck_lst)), columns=['fn', 'dis', 'cls', 'cls_check'])
+        """
         df = pd.DataFrame({
             'fn': fn_lst,
             'dis': dis_lst,
@@ -1799,29 +1800,93 @@ class BaseTrainer(object):
             'img': img_lst,
             'cls_check': clscheck_lst
         })
-
+        
         df['cls_0'] = df['cls'] - df['cls_check']
         print("df['cls_0'].max(), df['cls_0'].min() = {}, {}".format(df['cls_0'].max(), df['cls_0'].min()))
 
+        Oh No! I can't use pandas. Why pandas can't be used here, and matplotlib seems also cause stdout problems. 
+        It seems pandas will made the numpy error, so I have to implement my own pandas using numpy, 
+        structured numpy array etc. This is stupid! Those package compatibility issues are just rubbish!
+        """
+
+
+        len_lst = len(fn_lst)
+        assert len(dis_lst) == len_lst and len(cls_lst) == len_lst and len(img_lst) == len_lst and len(clscheck_lst) == len_lst, 'Check Error!! Mismatching list length!'
+
+        id_lst = list(range(len_lst))
+        fn_dict = dict(zip(id_lst, fn_lst))
+        img_dict = dict(zip(id_lst, img_lst))
+
+        # structure array dtypes can be dict or list of tuples
+        t = np.dtypes({
+            'names': ('id', 'dis', 'cls', 'cls_check'),
+            'formats': ('uint8', 'float32', 'float32', 'float32')
+        })
+
+        t2 = np.dtypes(
+            [('id', 'i8'),
+             ('dis', 'f8'),
+             ('cls', 'f8'),
+             ('cls_check', 'f8'),
+             ('cls_0', 'f8'),
+             ('img', 'f8', img_lst[0].shape)]
+        )
+
+        dt = np.zeros(len_lst, dtype={'names': ('id', 'dis', 'cls', 'cls_check', 'cls_0', 'close_to_mid'),
+                                      'formats': ('i4', 'f8', 'f8', 'f8', 'f8', 'f8')})
+        dt['id'] = id_lst
+        dt['dis'] = dis_lst
+        dt['cls'] = cls_lst
+        dt['cls_check'] = clscheck_lst
+        dt['cls_0'] = dt['cls'] - dt['cls_check']
+        dt['close_to_mid'] = np.abs(dt['cls'] - 0.5)
+        print('dt[:10]: ', dt[:10])
+        # dt_rec = dt.view(np.recarray)
+        # dt_rec.id
+        # x = np.array([(1, 2, 3), (4, 5, 6)], dtype='i8, f4, f8')
+        dt3 = np.array(list(zip(id_lst, dis_lst, cls_lst, clscheck_lst)), dtype=t)
+        print('dt3[:10]: ', dt3[:10])
+
+        id = np.asarray(id_lst)
+        dis = np.asarray(dis_lst)
+        cls = np.asarray(cls_lst)
+        cls_check = np.asarray(clscheck_lst)
+        cls_0 = cls - cls_check
+        dt2 = np.c_[id, dis, cls, cls_check, cls_0]
+        print('dt2[:10]:', dt2[:10])
+
+
+        """
         if dict_inference_args["a2b"]: # 0 to 1
             df_sort = df.sort_values(by=['cls'], inplace=False, ascending=False)
             heads_cls = df_sort.head(100)
             df_sort = df.sort_values(by=['cls'], inplace=False, ascending=True)
             tails_cls = df_sort.head(100)
             df_sort['close_to_mid'] = (df_sort['cls'] - 0.5).abs()
-            mids_cls = df_sort.sort_values(by=['cls'], inplace=False, ascending=True).head(100)
+            mids_cls = df_sort.sort_values(by=['close_to_mid'], inplace=False, ascending=True).head(100)
         else: # 1 to 0
             df_sort = df.sort_values(by=['cls'], inplace=False, ascending=True)
             heads_cls = df_sort.head(100)
             df_sort = df.sort_values(by=['cls'], inplace=False, ascending=False)
             tails_cls = df_sort.head(100)
             df_sort['close_to_mid'] = (df_sort['cls'] - 0.5).abs()
-            mids_cls = df_sort.sort_values(by=['cls'], inplace=False, ascending=True).head(100)
+            mids_cls = df_sort.sort_values(by=['close_to_mid'], inplace=False, ascending=True).head(100)
 
         df_sort = df.sort_values(by=['dis'], inplace=False, ascending=False)
         heads_dis = df_sort.head(100)
         df_sort = df.sort_values(by=['dis'], inplace=False, ascending=True)
         tails_dis = df_sort.head(100)
+        """
+
+        sorted_array = np.sort(dt, order='cls')
+        heads_cls = sorted_array[::-1][:100] if dict_inference_args["a2b"] else sorted_array[:100]
+        tails_cls = sorted_array[:100] if dict_inference_args["a2b"] else sorted_array[::-1][:100]
+        mids_cls = np.sort(dt, order='close_to_mid')[:100]
+
+
+        sorted_dis = np.sort(dt, order='dis')
+        heads_dis = sorted_dis[::-1][:100]
+        tails_dis = sorted_dis[:100]
 
         ncols = 10
         nrows = 10
