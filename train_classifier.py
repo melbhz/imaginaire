@@ -20,7 +20,7 @@ import random
 import collections
 
 from imaginaire.config import Config
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import sys
 
 '''
@@ -306,6 +306,7 @@ class ClassifierTrainer():
             return npimg
 
         def vis1():
+            import matplotlib.pyplot as plt
             # get some random training images
             dataiter = iter(self.train_loader)
             images, labels, _ = dataiter.next()
@@ -330,6 +331,7 @@ class ClassifierTrainer():
         vis2()
 
     def save_plot_and_sample_images(self):
+        import matplotlib.pyplot as plt
         def plot_loss():
             fig = plt.figure(figsize=(16, 9))
             plt.title("Train - Validation Loss")
@@ -414,6 +416,7 @@ class ClassifierTrainer():
 
         def vis_report_sample(submission):
             import random
+            import matplotlib.pyplot as plt
             id_list = []
             # classes = {0: 'dog', 1: 'cat'}
             fig, axes = plt.subplots(3, 5, figsize=(10, 6), facecolor='w')
