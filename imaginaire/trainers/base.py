@@ -1829,7 +1829,8 @@ class BaseTrainer(object):
              ('cls', 'f8'),
              ('cls_check', 'f8'),
              ('cls_0', 'f8'),
-             ('img', 'f8', img_lst[0].shape)]
+             # ('img', 'f8', img_lst[0].shape)
+             ]
         )
 
         dt = np.zeros(len_lst, dtype={'names': ('id', 'dis', 'cls', 'cls_check', 'cls_0', 'close_to_mid'),
