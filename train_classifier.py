@@ -115,7 +115,7 @@ class Net(nn.Module):
 
 
 class ClassifierTrainer():
-    def __init__(self, cfg, model, optimizer, scheduler, train_loader, val_loader, n_epochs):
+    def __init__(self, cfg, model, optimizer=None, scheduler=None, train_loader=None, val_loader=None, n_epochs=None):
         print('Setup trainer.')
 
         # Initialize models and data loaders.
