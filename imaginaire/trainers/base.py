@@ -1937,6 +1937,7 @@ class BaseTrainer(object):
 
         for df, pos in zip([heads_cls, tails_cls, mids_cls, heads_dis, tails_dis], ['heads_cls', 'tails_cls', 'mids_cls', 'heads_dis', 'tails_dis']):
             fullname = os.path.join(output_dir, '{}_{}.jpg'.format(content_fn, pos))
+            fullname_txt = os.path.join(output_dir, '{}_{}.txt'.format(content_fn, pos))
             vis_images = torch.cat([img_dict[id].unsqueeze(0) for id in df['id']], dim=0).float()
             vis_images = (vis_images + 1) / 2
             vis_images.clamp_(0, 1)
@@ -1946,6 +1947,20 @@ class BaseTrainer(object):
             # torchvision.utils.save_image(image_grid, path, nrow=10)
             print('saving {}'.format(fullname))
             torchvision.transforms.ToPILImage()(image_grid).save(fullname)
+
+            print('saving {}'.format(fullname_txt))
+            with open(fullname_txt, "w") as f:
+                if pos in ['heads_cls', 'tails_cls', 'mids_cls']:
+                    f.write(f'style_filename,probability_of_belonging_to_Domain{target_domain}\n')
+                    for id, probability in zip(df['id'], df['cls']):
+                        prob = f'{probability:.3f}' if dict_inference_args["a2b"] else f'{1 - probability:.3f}'
+                        f.write(f'{fn_dict[id]},{prob}\n')
+                elif pos in ['heads_dis', 'tails_dis']:
+                    f.write(f'style_filename,discriminator_score\n')
+                    for id, dis in zip(df['id'].to_list(), df['dis'].to_list()):
+                        f.write(f'{fn_dict[id]},{dis:.3f}\n')
+                else:
+                    print(f"Wrong pos value! pos = {pos}. Check Error!!")
 
         print("Debug Done, return.")
         return
