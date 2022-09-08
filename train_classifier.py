@@ -130,6 +130,11 @@ class ClassifierTrainer():
         print(f'device: {self.device}')
         self.model = self.model.to(self.device)
 
+        self.classes = ('Dog', 'Cat')
+        if self.is_inference:
+            # The initialization steps below can be skipped during inference.
+            return
+
         self.criterion = nn.CrossEntropyLoss()
         self.print_every = 100
         self.valid_loss_min = np.Inf
@@ -141,7 +146,7 @@ class ClassifierTrainer():
         self.total_step = len(self.train_loader)
         self.n_epochs = n_epochs
         # self.classes = {0: 'Dog', 1: 'Cat'}
-        self.classes = ('Dog', 'Cat')
+        # self.classes = ('Dog', 'Cat')
 
         # Initialize logging attributes.
         self.current_iteration = 0
