@@ -1958,7 +1958,7 @@ class BaseTrainer(object):
                         f.write(f'{fn_dict[id]},{prob}\n')
                 elif pos in ['heads_dis', 'tails_dis']:
                     f.write(f'style_filename,discriminator_score\n')
-                    for id, dis in zip(df['id'].to_list(), df['dis'].to_list()):
+                    for id, dis in zip(df['id'], df['dis']):
                         f.write(f'{fn_dict[id]},{dis:.3f}\n')
                 else:
                     print(f"Wrong pos value! pos = {pos}. Check Error!!")
