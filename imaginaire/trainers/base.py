@@ -6,7 +6,6 @@ import json
 import os
 import time
 
-import pandas as pd
 import torch
 import torchvision
 import wandb
@@ -1818,12 +1817,12 @@ class BaseTrainer(object):
         img_dict = dict(zip(id_lst, img_lst))
 
         # structure array dtypes can be dict or list of tuples
-        t = np.dtypes({
+        t_nouse = np.dtypes({
             'names': ('id', 'dis', 'cls', 'cls_check'),
             'formats': ('uint8', 'float32', 'float32', 'float32')
         })
 
-        t2 = np.dtypes(
+        t_nouse2 = np.dtypes(
             [('id', 'i8'),
              ('dis', 'f8'),
              ('cls', 'f8'),
@@ -1844,16 +1843,16 @@ class BaseTrainer(object):
         # dt_rec = dt.view(np.recarray)
         # dt_rec.id
         # x = np.array([(1, 2, 3), (4, 5, 6)], dtype='i8, f4, f8')
-        dt3 = np.array(list(zip(id_lst, dis_lst, cls_lst, clscheck_lst)), dtype=t)
-        print('dt3[:10]: ', dt3[:10])
+        dt_nouse = np.array(list(zip(id_lst, dis_lst, cls_lst, clscheck_lst)), dtype=t_nouse)
+        print('dt_nouse[:10]: ', dt_nouse[:10])
 
         id = np.asarray(id_lst)
         dis = np.asarray(dis_lst)
         cls = np.asarray(cls_lst)
         cls_check = np.asarray(clscheck_lst)
         cls_0 = cls - cls_check
-        dt2 = np.c_[id, dis, cls, cls_check, cls_0]
-        print('dt2[:10]:', dt2[:10])
+        dt_nouse2 = np.c_[id, dis, cls, cls_check, cls_0]
+        print('dt2[:10]:', dt_nouse2[:10])
 
 
         """
@@ -1897,7 +1896,9 @@ class BaseTrainer(object):
 
         for df, pos in zip([heads_cls, tails_cls, mids_cls], ['heads_cls', 'tails_cls', 'mids_cls']):
             fig, axis = plt.subplots(nrows, ncols, figsize=(width, heigt))
-            for ax, fn, img, probability in zip(axis.flat, df['fn'].to_list(), df['img'].to_list(), df['cls'].to_list()):
+            for ax, id, probability in zip(axis.flat, df['id'].to_list(), df['cls'].to_list()):
+                img = img_dict[id]
+                # fn = fn_dict[id]
                 ax.imshow(img)
                 title = f'{probability:.2f}' if dict_inference_args["a2b"] else f'{1-probability:.2f}'
                 ax.axis('off')
@@ -1909,12 +1910,14 @@ class BaseTrainer(object):
 
         for df, pos in zip([heads_dis, tails_dis], ['heads_dis', 'tails_dis']):
             fig, axis = plt.subplots(nrows, ncols, figsize=(width, heigt))
-            for ax, fn, img, dis in zip(axis.flat, df['fn'].to_list(), df['img'].to_list(), df['dis'].to_list()):
+            for ax, id, dis in zip(axis.flat, df['id'].to_list(), df['dis'].to_list()):
+                img = img_dict[id]
+                # fn = fn_dict[id]
                 ax.imshow(img)
                 title = f'{dis:.3f}'
                 ax.axis('off')
                 ax.set_title(title)
-            fig.suptitle(f'{pos} images for realistic score', fontsize=16)
+            fig.suptitle(f'{pos} images for discriminator score', fontsize=16)
             fullname = os.path.join(output_dir, '{}_{}.jpg'.format(content_fn, pos))
             print('saving {}'.format(fullname))
             fig.savefig(fullname, bbox_inches='tight')
