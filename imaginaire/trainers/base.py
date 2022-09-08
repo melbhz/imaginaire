@@ -1785,8 +1785,10 @@ class BaseTrainer(object):
                 dis_lst.append(disc_score)
                 cls_lst.append(cls_score)
 
-                output_image = tensor2pilimage(output_image.clamp_(-1, 1), minus1to1_normalized=True)
+                # to check classifier outputs are the same using either output tensor from inference_tensor or its transformed pil image
                 img_lst.append(output_image)
+                output_image = tensor2pilimage(output_image.clamp_(-1, 1), minus1to1_normalized=True)
+                # img_lst.append(output_image)
                 img_tensor = classifier.tranform_image(output_image)
                 img_tensor = img_tensor.unsqueeze(0)
                 classifier_outputs_check = classifier.inference(img_tensor)
@@ -1894,7 +1896,11 @@ class BaseTrainer(object):
         nrows = 10
         width = 15
         heigt = 15.8
+        """
+        
         import matplotlib.pyplot as plt
+        # shit!! I can't use matplotlib here, otherwise it will cause numpy error. This is stupid! I have to implement an alternative way - torchgrid.
+
         target_domain = 'B' if dict_inference_args["a2b"] else 'A'
 
         for df, pos in zip([heads_cls, tails_cls, mids_cls], ['heads_cls', 'tails_cls', 'mids_cls']):
@@ -1924,9 +1930,26 @@ class BaseTrainer(object):
             fullname = os.path.join(output_dir, '{}_{}.jpg'.format(content_fn, pos))
             print('saving {}'.format(fullname))
             fig.savefig(fullname, bbox_inches='tight')
+            
+        """
+
+        target_domain = 'B' if dict_inference_args["a2b"] else 'A'
+
+        for df, pos in zip([heads_cls, tails_cls, mids_cls, heads_dis, tails_dis], ['heads_cls', 'tails_cls', 'mids_cls', 'heads_dis', 'tails_dis']):
+            fullname = os.path.join(output_dir, '{}_{}.jpg'.format(content_fn, pos))
+            vis_images = torch.cat([img_dict[id].unsqueeze(0) for id in df['id']], dim=0).float()
+            vis_images = (vis_images + 1) / 2
+            vis_images.clamp_(0, 1)
+            os.makedirs(os.path.dirname(fullname), exist_ok=True)
+            # print(f'vis_images.size(): {vis_images.size()}')
+            image_grid = torchvision.utils.make_grid(vis_images, nrow=nrows, padding=2, normalize=False)
+            # torchvision.utils.save_image(image_grid, path, nrow=10)
+            print('saving {}'.format(fullname))
+            torchvision.transforms.ToPILImage()(image_grid).save(fullname)
 
         print("Debug Done, return.")
         return
+
 
         if debugging:
             print(f'contents.size(): {contents.size()}')
