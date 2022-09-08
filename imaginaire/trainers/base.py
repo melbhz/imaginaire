@@ -1776,7 +1776,7 @@ class BaseTrainer(object):
                 discriminator_outputs, _ = self.net_D.module.inference(output_images, **vars(inference_args))
                 discriminator_outputs = discriminator_outputs.detach().cpu().clone().numpy().ravel()
                 # Use np.ravel (for a 1D view) or np.ndarray.flatten (for a 1D copy) or np.ndarray.flat (for an 1D iterator):
-                print(f'discriminator_outputs: \n{discriminator_outputs}')
+                # print(f'discriminator_outputs: \n{discriminator_outputs}')
                 # continue
                 classifier_outputs = classifier.inference(output_images)
             assert len(output_images) == 1 and len(file_names) == 1 and len(discriminator_outputs) == 1 and len(classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(discriminator_outputs) == 1 and len(classifier_outputs) == 1'
