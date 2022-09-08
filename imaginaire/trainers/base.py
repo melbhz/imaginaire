@@ -1818,12 +1818,12 @@ class BaseTrainer(object):
         img_dict = dict(zip(id_lst, img_lst))
 
         # structure array dtypes can be dict or list of tuples
-        t_nouse = np.dtypes({
+        t_nouse = np.dtype({
             'names': ('id', 'dis', 'cls', 'cls_check'),
             'formats': ('uint8', 'float32', 'float32', 'float32')
         })
 
-        t_nouse2 = np.dtypes(
+        t_nouse2 = np.dtype(
             [('id', 'i8'),
              ('dis', 'f8'),
              ('cls', 'f8'),
