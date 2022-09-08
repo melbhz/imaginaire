@@ -1774,7 +1774,8 @@ class BaseTrainer(object):
                 output_images = net_G.inference_tensor(content, style, **vars(inference_args))
                 file_names = np.atleast_1d(file_names)
                 discriminator_outputs, _ = self.net_D.module.inference(output_images, **vars(inference_args))
-                discriminator_outputs = discriminator_outputs.detach().cpu().clone().numpy()
+                discriminator_outputs = discriminator_outputs.detach().cpu().clone().numpy().ravel()
+                # Use np.ravel (for a 1D view) or np.ndarray.flatten (for a 1D copy) or np.ndarray.flat (for an 1D iterator):
                 print(f'discriminator_outputs: \n{discriminator_outputs}')
                 # continue
                 classifier_outputs = classifier.inference(output_images)
