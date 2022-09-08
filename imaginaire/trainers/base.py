@@ -1780,8 +1780,9 @@ class BaseTrainer(object):
             assert len(output_images) == 1 and len(file_names) == 1 and len(discriminator_outputs) == 1 and len(classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(discriminator_outputs) == 1 and len(classifier_outputs) == 1'
             for output_image, file_name, disc_score, cls_score in zip(output_images, file_names, discriminator_outputs, classifier_outputs):
                 fn_lst.append(file_name)
-                dis_lst.append(disc_score.item())
-                cls_lst.append(cls_score.item())
+                print(f'disc_score: {disc_score} \t cls_score: {cls_score}')
+                dis_lst.append(disc_score)
+                cls_lst.append(cls_score)
 
                 output_image = tensor2pilimage(output_image.clamp_(-1, 1), minus1to1_normalized=True)
                 img_lst.append(output_image)
