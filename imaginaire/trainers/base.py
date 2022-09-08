@@ -1775,13 +1775,13 @@ class BaseTrainer(object):
                 file_names = np.atleast_1d(file_names)
                 discriminator_outputs, _ = self.net_D.module.inference(output_images, **vars(inference_args))
                 discriminator_outputs = discriminator_outputs.detach().cpu().clone().numpy()
-                # print(f'discriminator_outputs: \n{discriminator_outputs}')
+                print(f'discriminator_outputs: \n{discriminator_outputs}')
                 # continue
                 classifier_outputs = classifier.inference(output_images)
             assert len(output_images) == 1 and len(file_names) == 1 and len(discriminator_outputs) == 1 and len(classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(discriminator_outputs) == 1 and len(classifier_outputs) == 1'
             for output_image, file_name, disc_score, cls_score in zip(output_images, file_names, discriminator_outputs, classifier_outputs):
                 fn_lst.append(file_name)
-                print(f'disc_score: {disc_score} \t cls_score: {cls_score}')
+                # print(f'disc_score: {disc_score} \t cls_score: {cls_score}')
                 dis_lst.append(disc_score)
                 cls_lst.append(cls_score)
 
