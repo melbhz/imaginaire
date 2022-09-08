@@ -1,7 +1,7 @@
 import os
 import glob
 import numpy as np
-import pandas as pd
+# import pandas as pd
 from PIL import Image
 
 import torch
@@ -393,6 +393,7 @@ class ClassifierTrainer():
     # ## 4. Test Model
     def save_report_and_sample_vis(self):
         def save_report(test_loader=self.val_loader):
+            import pandas as pd
             cat_probs = []
             self.model.eval()
             with torch.no_grad():
