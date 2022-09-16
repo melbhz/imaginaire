@@ -2074,6 +2074,7 @@ class BaseTrainer(object):
         #     os.makedirs(output_dir)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
+            print(f'created {output_dir}')
         print('# of images to translate: %d' % len(content_list))
         for tsne_one_image_id in tqdm(range(10)):#len(content_list))):
             # print(f'{tsne_one_image_id}')
