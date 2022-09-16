@@ -2038,7 +2038,7 @@ class BaseTrainer(object):
         dict_inference_args = dict(inference_args)
         print(f"dict_inference_args: {dict_inference_args}")
         debugging = False  # True
-        # print('# of samples for getting content and style code: %d' % len(data_loader))
+        print('# of samples for getting content and style code: %d' % len(data_loader))
 
         with torch.no_grad():
             content_dict = {}
@@ -2075,6 +2075,7 @@ class BaseTrainer(object):
             os.makedirs(output_dir, exist_ok=True)
         # content = contents[tsne_one_image_id].unsqueeze(0)
         for tsne_one_image_id in tqdm(range(len(content_list))):
+            print(f'{tsne_one_image_id}')
             content = content_list[tsne_one_image_id].unsqueeze(0)
             content_fn = content_fname_list[tsne_one_image_id]
             self.translate_one_image(output_dir, net_G, classifier, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=top_N, content_front=content_front)
@@ -2134,14 +2135,13 @@ class BaseTrainer(object):
         '''
 
     def translate_one_image(self, output_dir, net_G, classifier, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True):
-        print(f'The one image to translate is {content_fn}')
+        print(f'The one image to translate is {content_fn}.jpg')
         content_image_src = os.path.join(content_dirname, f'{content_fn}.jpg')
         content_image_copy = os.path.join(output_dir, f'{content_fn}_a2b_{dict_inference_args["a2b"]}.jpg')
         print(f'Make a copy of content image from {content_image_src} to \n {content_image_copy}')
         shutil.copyfile(content_image_src, content_image_copy)
 
         fn_lst = []
-        dis_lst = []
         cls_lst = []
         img_lst = []
         for file_names, style in tqdm(style_dict.items()):  # zip(styles, style_fname_list):
@@ -2157,16 +2157,15 @@ class BaseTrainer(object):
                 img_lst.append(output_image)
 
         len_lst = len(fn_lst)
-        assert len(dis_lst) == len_lst and len(cls_lst) == len_lst and len(img_lst) == len_lst, 'Check Error!! Mismatching list length!'
+        assert len(cls_lst) == len_lst and len(img_lst) == len_lst, 'Check Error!! Mismatching list length!'
 
         id_lst = list(range(len_lst))
         fn_dict = dict(zip(id_lst, fn_lst))
         img_dict = dict(zip(id_lst, img_lst))
 
-        dt = np.zeros(len_lst, dtype={'names':   ('id', 'dis', 'cls', 'close_to_mid'),
-                                      'formats': ('i4', 'f8', 'f8', 'f8')})
+        dt = np.zeros(len_lst, dtype={'names':   ('id', 'cls', 'close_to_mid'),
+                                      'formats': ('i4', 'f8', 'f8')})
         dt['id'] = id_lst
-        dt['dis'] = dis_lst
         dt['cls'] = cls_lst
         dt['close_to_mid'] = np.abs(dt['cls'] - 0.5)
         # print('dt[:10]: ', dt[:10])
@@ -2176,7 +2175,7 @@ class BaseTrainer(object):
         # tails_cls = sorted_array[:top_N] if dict_inference_args["a2b"] else sorted_array[::-1][:top_N]
         # mids_cls = np.sort(dt, order='close_to_mid')[:top_N]
 
-        nrows = 10 # nrow (int, optional) – Number of images displayed in each row of the grid.
+        # nrow (int, optional) – Number of images displayed in each row of the grid.
         if top_N > 10:
             nrows = math.ceil(math.sqrt(top_N))
         else:
