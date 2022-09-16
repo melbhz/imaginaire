@@ -2202,7 +2202,7 @@ class BaseTrainer(object):
             # print(f'vis_images.size(): {vis_images.size()}')
             image_grid = torchvision.utils.make_grid(vis_images, nrow=nrows, padding=2, normalize=False)
             # torchvision.utils.save_image(image_grid, path, nrow=10)
-            # print('saving {}'.format(fullname))
+            print('saving {}'.format(fullname))
             torchvision.transforms.ToPILImage()(image_grid).save(fullname)
             # print('saving {}'.format(fullname_txt))
             with open(fullname_txt, "w") as f:
