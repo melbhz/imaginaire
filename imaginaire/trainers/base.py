@@ -2190,6 +2190,7 @@ class BaseTrainer(object):
             fullname_txt = os.path.join(output_dir, '{}_{}.txt'.format(content_fn, pos))
 
             vis_images = torch.cat([img_dict[id].unsqueeze(0) for id in df['id']], dim=0).float()
+            content_img = content_img.unsqueeze(0)
             print(f'before torch.cat: content_img.size() = {content_img.size()}; vis_images.size() = {vis_images.size()}')
             if content_front:
                 vis_images = torch.cat([content_img, vis_images], dim=0)
