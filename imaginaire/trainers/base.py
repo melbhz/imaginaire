@@ -2076,7 +2076,7 @@ class BaseTrainer(object):
             os.makedirs(output_dir, exist_ok=True)
             print(f'created {output_dir}')
         print('# of images to translate: %d' % len(content_list))
-        for tsne_one_image_id in tqdm(range(10)):#len(content_list))):
+        for tsne_one_image_id in range(10):#tqdm(range(len(content_list))):
             # print(f'{tsne_one_image_id}')
             content = content_list[tsne_one_image_id].unsqueeze(0)
             content_fn = content_fname_list[tsne_one_image_id]
