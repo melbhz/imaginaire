@@ -2157,7 +2157,7 @@ class BaseTrainer(object):
         img_lst = []
         if style_dict_loader is not None:
             for file_names, styles in style_dict_loader:
-                # print(f'content: {content}, styles: {styles}')
+                print(f'content.shape: {content.shape}, styles.shape: {styles.shape}')
                 # content = content.expand_as(styles)
                 # style = style.unsqueeze(0)
                 with torch.no_grad():
