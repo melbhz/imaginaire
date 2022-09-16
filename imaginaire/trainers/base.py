@@ -2155,10 +2155,10 @@ class BaseTrainer(object):
         img_lst = []
         if style_dict_loader is not None:
             for file_names, styles in style_dict_loader:
-                print(f'content.shape: {content.shape}, styles.shape: {styles.shape}')
+                # print(f'content.shape: {content.shape}, styles.shape: {styles.shape}')
                 # content = content.expand_as(styles)
                 contents = content.expand(styles.size(dim=0), -1, -1, -1)
-                print(f'contents.shape: {contents.shape}, styles.shape: {styles.shape}')
+                # print(f'contents.shape: {contents.shape}, styles.shape: {styles.shape}')
                 # style = style.unsqueeze(0)
                 with torch.no_grad():
                     output_images = net_G.inference_tensor(contents, styles, **vars(inference_args))
