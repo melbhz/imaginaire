@@ -2157,7 +2157,7 @@ class BaseTrainer(object):
         img_lst = []
         if style_dict_loader is not None:
             for file_names, styles in style_dict_loader:
-                print(f'content: {content}, styles: {styles}')
+                # print(f'content: {content}, styles: {styles}')
                 # content = content.expand_as(styles)
                 # style = style.unsqueeze(0)
                 with torch.no_grad():
@@ -2181,20 +2181,6 @@ class BaseTrainer(object):
                     fn_lst.append(file_name)
                     cls_lst.append(cls_score)
                     img_lst.append(output_image)
-
-        # Testing batch
-        batch_size_classifier = 100
-        for file_names, style in style_dict.items(): #tqdm(style_dict.items()):  # zip(styles, style_fname_list):
-            style = style.unsqueeze(0)
-            with torch.no_grad():
-                output_images = net_G.inference_tensor(content, style, **vars(inference_args))
-                file_names = np.atleast_1d(file_names)
-                classifier_outputs = classifier.inference(output_images)
-            assert len(output_images) == 1 and len(file_names) == 1 and len(classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(classifier_outputs) == 1'
-            for output_image, file_name, cls_score in zip(output_images, file_names, classifier_outputs):
-                fn_lst.append(file_name)
-                cls_lst.append(cls_score)
-                img_lst.append(output_image)
 
         len_lst = len(fn_lst)
         assert len(cls_lst) == len_lst and len(img_lst) == len_lst, 'Check Error!! Mismatching list length!'
