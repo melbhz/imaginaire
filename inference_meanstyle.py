@@ -46,6 +46,9 @@ def parse_args():
     parser.add_argument('--checkpoint_classifier', default='', help='Checkpoint path of classifier.')
     parser.add_argument('--top_N', type=int, default=10)
     parser.add_argument('--not_content_front', action='store_true')
+
+    parser.add_argument('--use_style_loader', action='store_true')
+    parser.add_argument('--batch_size_classifier', type=int, default=100)
     
     args = parser.parse_args()
     return args
@@ -113,9 +116,9 @@ def main():
         import train_classifier
         classifier = train_classifier.ClassifierTrainer(cfg=cfg, model=train_classifier.Net())
         classifier.load_checkpoint(checkpoint_path=args.checkpoint_classifier)
-        classifier.model.eval()
+        # classifier.model.eval()
         # trainer.test_tsne_one_image_classifier(test_data_loader, args.output_dir, args.tsne_one_image_id, classifier, cfg.inference_args)
-        trainer.test_classifier(test_data_loader, args.output_dir, classifier, cfg.inference_args, top_N=args.top_N, content_front=not args.not_content_front)
+        trainer.test_classifier(test_data_loader, args.output_dir, classifier, cfg.inference_args, top_N=args.top_N, content_front=not args.not_content_front, use_style_loader=args.use_style_loader, batch_size_classifier=args.batch_size_classifier)
     else:
         trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only, args.all_styles, args.simple_grid, args.grid_styles, cfg.inference_args)
 

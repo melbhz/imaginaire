@@ -66,6 +66,35 @@ class dataset(Dataset):
             print(f'Error: wrong label found! label = {label}')
         return image, label, img_path
 
+class style_dict_dataset(Dataset):
+    def __init__(self, style_dict):
+        self.style_list = style_dict.items()
+
+    def __getitem__(self, index):
+        fn, style = self.style_list[index]
+        return fn, style
+
+    def __len__(self):
+        return len(self.style_list)
+
+class style_list_dataset(Dataset):
+    def __init__(self, style_list, style_fname_list):
+        if len(style_list) != len(style_fname_list):
+            raise (RuntimeError(f'len(style_list) != len(style_fname_list): {len(style_list)} != {len(style_fname_list)}'))
+        self.style_list = style_list
+        self.style_fname_list = style_fname_list
+
+    def __getitem__(self, index):
+        fn, style = self.style_fname_list[index], self.style_list[index]
+        return fn, style
+
+    def __len__(self):
+        return len(self.style_list)
+
+def get_style_dict_loader(style_dict, batch_size):
+    style_dict_data = style_dict_dataset(style_dict)
+    style_dict_loader = torch.utils.data.DataLoader(dataset=style_dict_data, batch_size=batch_size, shuffle=False)
+    return style_dict_loader
 
 # ## 2. Model Nets
 class Net(nn.Module):
