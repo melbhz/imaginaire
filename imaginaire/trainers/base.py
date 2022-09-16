@@ -2085,8 +2085,6 @@ class BaseTrainer(object):
         for tsne_one_image_id in tqdm(range(len(content_list))):
             # print(f'{tsne_one_image_id}')
             content = content_list[tsne_one_image_id].unsqueeze(0)
-            if use_style_loader:
-                content = content.expand(batch_size_classifier, -1, -1, -1)
             content_fn = content_fname_list[tsne_one_image_id]
             content_img = content_image_list[tsne_one_image_id]
             self.translate_one_image(output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=top_N, content_front=content_front, style_dict_loader=style_dict_loader)
@@ -2157,8 +2155,9 @@ class BaseTrainer(object):
         img_lst = []
         if style_dict_loader is not None:
             for file_names, styles in style_dict_loader:
-                print(f'content.shape: {content.shape}, styles.shape: {styles.shape}')
+                # print(f'content.shape: {content.shape}, styles.shape: {styles.shape}')
                 # content = content.expand_as(styles)
+                content = content.expand(styles.size(dim=0), -1, -1, -1)
                 # style = style.unsqueeze(0)
                 with torch.no_grad():
                     output_images = net_G.inference_tensor(content, styles, **vars(inference_args))
