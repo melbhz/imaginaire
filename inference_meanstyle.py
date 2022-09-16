@@ -115,7 +115,7 @@ def main():
         classifier.load_checkpoint(checkpoint_path=args.checkpoint_classifier)
         classifier.model.eval()
         # trainer.test_tsne_one_image_classifier(test_data_loader, args.output_dir, args.tsne_one_image_id, classifier, cfg.inference_args)
-        trainer.test_classifier(test_data_loader, args.output_dir, classifier, cfg.inference_args, top_N=cfg.top_N, content_front=not cfg.not_content_front)
+        trainer.test_classifier(test_data_loader, args.output_dir, classifier, cfg.inference_args, top_N=args.top_N, content_front=not args.not_content_front)
     else:
         trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only, args.all_styles, args.simple_grid, args.grid_styles, cfg.inference_args)
 
