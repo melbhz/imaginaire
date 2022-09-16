@@ -2076,7 +2076,7 @@ class BaseTrainer(object):
             os.makedirs(output_dir, exist_ok=True)
             print(f'created {output_dir}')
         print('# of images to translate: %d' % len(content_list))
-        for tsne_one_image_id in range(10):#tqdm(range(len(content_list))):
+        for tsne_one_image_id in tqdm(range(10)):#len(content_list))):
             # print(f'{tsne_one_image_id}')
             content = content_list[tsne_one_image_id].unsqueeze(0)
             content_fn = content_fname_list[tsne_one_image_id]
@@ -2147,7 +2147,7 @@ class BaseTrainer(object):
         fn_lst = []
         cls_lst = []
         img_lst = []
-        for file_names, style in tqdm(style_dict.items()):  # zip(styles, style_fname_list):
+        for file_names, style in style_dict.items(): #tqdm(style_dict.items()):  # zip(styles, style_fname_list):
             style = style.unsqueeze(0)
             with torch.no_grad():
                 output_images = net_G.inference_tensor(content, style, **vars(inference_args))
@@ -2202,9 +2202,9 @@ class BaseTrainer(object):
             # print(f'vis_images.size(): {vis_images.size()}')
             image_grid = torchvision.utils.make_grid(vis_images, nrow=nrows, padding=2, normalize=False)
             # torchvision.utils.save_image(image_grid, path, nrow=10)
-            print('saving {}'.format(fullname))
+            # print('saving {}'.format(fullname))
             torchvision.transforms.ToPILImage()(image_grid).save(fullname)
-            print('saving {}'.format(fullname_txt))
+            # print('saving {}'.format(fullname_txt))
             with open(fullname_txt, "w") as f:
                 if pos in ['heads_cls', 'tails_cls', 'mids_cls']:
                     f.write(f'style_filename,probability_of_belonging_to_Domain{target_domain}\n')
