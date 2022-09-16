@@ -2035,8 +2035,6 @@ class BaseTrainer(object):
             net_G = self.net_G.module
         net_G.eval()
 
-        classifier.eval()
-
         dict_inference_args = dict(inference_args)
         print(f"dict_inference_args: {dict_inference_args}")
         debugging = False  # True

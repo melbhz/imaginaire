@@ -111,6 +111,7 @@ def main():
         import train_classifier
         classifier = train_classifier.ClassifierTrainer(cfg=cfg, model=train_classifier.Net())
         classifier.load_checkpoint(checkpoint_path=args.checkpoint_classifier)
+        classifier.model.eval()
         # trainer.test_tsne_one_image_classifier(test_data_loader, args.output_dir, args.tsne_one_image_id, classifier, cfg.inference_args)
         trainer.test_classifier(test_data_loader, args.output_dir, classifier, cfg.inference_args, top_N=10, content_front=True)
     else:
