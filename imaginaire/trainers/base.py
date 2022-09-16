@@ -2028,7 +2028,7 @@ class BaseTrainer(object):
         path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
         '''
 
-    def test_classifier(self, data_loader, output_dir, classifier, inference_args, top_N=10, content_front=True, use_style_loader=True, batch_size_classifier=100):
+    def test_classifier(self, data_loader, output_dir, classifier, inference_args, top_N=10, content_front=True, use_style_loader=True, batch_size_classifier=100, inference_resume=False):
         if self.cfg.trainer.model_average_config.enabled:
             net_G = self.net_G.module.averaged_model
         else:
@@ -2087,7 +2087,7 @@ class BaseTrainer(object):
             content = content_list[tsne_one_image_id].unsqueeze(0)
             content_fn = content_fname_list[tsne_one_image_id]
             content_img = content_image_list[tsne_one_image_id]
-            self.translate_one_image(output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=top_N, content_front=content_front, style_dict_loader=style_dict_loader)
+            self.translate_one_image(output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=top_N, content_front=content_front, style_dict_loader=style_dict_loader, inference_resume=inference_resume)
 
         self.save_style_codes(debugging, content_list, content_dict, styles, style_list, style_dict, content, style, style_fname_list, style_dirname, dict_inference_args, output_dir)
 
@@ -2143,12 +2143,16 @@ class BaseTrainer(object):
         path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
         '''
 
-    def translate_one_image(self, output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True, style_dict_loader=None):
+    def translate_one_image(self, output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True, style_dict_loader=None, inference_resume=False):
         # print(f'translating {content_fn}.jpg')
         # content_image_src = os.path.join(content_dirname, f'{content_fn}.jpg')
         # content_image_copy = os.path.join(output_dir, f'{content_fn}_a2b_{dict_inference_args["a2b"]}.jpg')
         # print(f'Make a copy of content image from {content_image_src} to \n {content_image_copy}')
         # shutil.copyfile(content_image_src, content_image_copy)
+        if inference_resume:
+            if os.path.exists(os.path.join(output_dir, f'{content_fn}_heads_cls.jpg')):
+                print(f'existed, skipping {content_fn}_heads_cls.jpg')
+                return
 
         fn_lst = []
         cls_lst = []
