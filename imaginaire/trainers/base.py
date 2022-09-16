@@ -21,6 +21,10 @@ from imaginaire.utils.model_average import (calibrate_batch_norm_momentum,
                                             reset_batch_norm)
 from imaginaire.utils.visualization import tensor2pilimage
 
+import numpy as np
+import shutil
+import math
+
 
 class BaseTrainer(object):
     r"""Base trainer. We expect that all trainers inherit this class.
@@ -1698,7 +1702,7 @@ class BaseTrainer(object):
         '''
 
 
-    def test_tsne_one_image_classifier(self, data_loader, output_dir, tsne_one_image_id, classifier, inference_args):
+    def test_tsne_one_image_classifier_bak(self, data_loader, output_dir, tsne_one_image_id, classifier, inference_args):
         if self.cfg.trainer.model_average_config.enabled:
             net_G = self.net_G.module.averaged_model
         else:
@@ -2023,6 +2027,190 @@ class BaseTrainer(object):
 
         path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
         '''
+
+    def test_classifier(self, data_loader, output_dir, classifier, inference_args, top_N=10, content_front=True):
+        if self.cfg.trainer.model_average_config.enabled:
+            net_G = self.net_G.module.averaged_model
+        else:
+            net_G = self.net_G.module
+        net_G.eval()
+
+        classifier.eval()
+
+        dict_inference_args = dict(inference_args)
+        print(f"dict_inference_args: {dict_inference_args}")
+        debugging = False  # True
+        # print('# of samples for getting content and style code: %d' % len(data_loader))
+
+        with torch.no_grad():
+            content_dict = {}
+            content_list = []
+            content_fname_list = []
+            style_dict = {}
+            style_list = []
+            style_fname_list = []
+        for it, data in enumerate(tqdm(data_loader)):
+            data = self.start_of_iteration(data, current_iteration=-1)
+            with torch.no_grad():
+                # style_tensors, style_filenames, style_dirname = net_G.get_style_code(data, **vars(inference_args))
+                content, content_filenames, content_dirname, style, style_filenames, style_dirname = net_G.get_content_and_style_code(
+                    data, **vars(inference_args))
+
+                for cont, fn in zip(content, content_filenames):
+                    if fn not in content_dict:
+                        content_dict[fn] = cont
+                        content_list.append(cont)
+                        content_fname_list.append(fn)
+
+                for st, fn in zip(style, style_filenames):
+                    if fn not in style_dict:
+                        style_dict[fn] = st
+                        style_list.append(st)
+                        style_fname_list.append(fn)
+
+        # contents = torch.cat([x.unsqueeze(0) for x in content_list], 0)
+        styles = torch.cat([x.unsqueeze(0) for x in style_list], 0)
+
+        # if not os.path.isdir(output_dir):
+        #     os.makedirs(output_dir)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+        # content = contents[tsne_one_image_id].unsqueeze(0)
+        for tsne_one_image_id in tqdm(range(len(content_list))):
+            content = content_list[tsne_one_image_id].unsqueeze(0)
+            content_fn = content_fname_list[tsne_one_image_id]
+            self.translate_one_image(output_dir, net_G, classifier, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=top_N, content_front=content_front)
+
+        self.save_style_codes(debugging, content_list, content_dict, styles, style_list, style_dict, content, style, style_fname_list, style_dirname, dict_inference_args, output_dir)
+
+    def save_style_codes(self, debugging, content_list, content_dict, styles, style_list, style_dict, content, style, style_fname_list, style_dirname, dict_inference_args, output_dir):
+        if debugging:
+            # print(f'contents.size(): {contents.size()}')
+            print(f'len(content_list): {len(content_list)}')
+            print(f'len(content_dict): {len(content_dict)}')
+            print(f'styles.size(): {styles.size()}')
+            print(f'len(style_list): {len(style_list)}')
+            print(f'len(style_dict): {len(style_dict)}')
+            print(f'last content.size(): {content.size()}')
+            print(f'last style.size(): {style.size()}')
+
+        # import numpy as np
+        content_data = {}
+        style_data = {}
+
+        # content_data['data'] = contents.detach().cpu().squeeze().numpy()
+        style_data['data'] = styles.detach().cpu().squeeze().numpy()
+        # content_data['filename'] = np.asarray(content_fname_list)
+        style_data['filename'] = np.asarray(style_fname_list)
+        # content_data['dirname'] = content_dirname
+        style_data['dirname'] = style_dirname
+        # content_data['a2b'] = dict_inference_args["a2b"]
+        style_data['a2b'] = dict_inference_args["a2b"]
+        # contents_pkl = os.path.join(output_dir, f'../styles_a2b_{dict_inference_args["a2b"]}_contents.pkl')
+        styles_pkl = os.path.join(output_dir, f'styles_a2b_{dict_inference_args["a2b"]}_styles.pkl')
+
+        if debugging:
+            print(f'content_data["data"].shape: {content_data["data"].shape}')
+            print(f'content_data["dirname"]: {content_data["dirname"]}')
+            print(f'content_data["filename"].shape: {content_data["filename"].shape}')
+            print(f'style_data["data"].shape: {style_data["data"].shape}')
+            print(f'style_data["dirname"]: {style_data["dirname"]}')
+            print(f'style_data["filename"].shape: {style_data["filename"].shape}')
+
+        # print('Saving content and style codes to {} and\n {}'.format(contents_pkl, styles_pkl))
+        print(f'Saving style codes to {styles_pkl}')
+
+        import pickle
+        with open(styles_pkl, 'wb') as f:
+            pickle.dump(style_data, f)
+        '''
+        with open(contents_pkl, 'wb') as f:
+            pickle.dump(content_data, f)
+            
+        with open(contents_pkl, 'rb') as f:
+            content_data = pickle.load(f)
+        with open(styles_pkl, 'rb') as f:
+            style_data = pickle.load(f)
+    
+        path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
+        '''
+
+    def translate_one_image(self, output_dir, net_G, classifier, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True):
+        print(f'The one image to translate is {content_fn}')
+        content_image_src = os.path.join(content_dirname, f'{content_fn}.jpg')
+        content_image_copy = os.path.join(output_dir, f'{content_fn}_a2b_{dict_inference_args["a2b"]}.jpg')
+        print(f'Make a copy of content image from {content_image_src} to \n {content_image_copy}')
+        shutil.copyfile(content_image_src, content_image_copy)
+
+        fn_lst = []
+        dis_lst = []
+        cls_lst = []
+        img_lst = []
+        for file_names, style in tqdm(style_dict.items()):  # zip(styles, style_fname_list):
+            style = style.unsqueeze(0)
+            with torch.no_grad():
+                output_images = net_G.inference_tensor(content, style, **vars(inference_args))
+                file_names = np.atleast_1d(file_names)
+                classifier_outputs = classifier.inference(output_images)
+            assert len(output_images) == 1 and len(file_names) == 1 and len(classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(classifier_outputs) == 1'
+            for output_image, file_name, cls_score in zip(output_images, file_names, classifier_outputs):
+                fn_lst.append(file_name)
+                cls_lst.append(cls_score)
+                img_lst.append(output_image)
+
+        len_lst = len(fn_lst)
+        assert len(dis_lst) == len_lst and len(cls_lst) == len_lst and len(img_lst) == len_lst, 'Check Error!! Mismatching list length!'
+
+        id_lst = list(range(len_lst))
+        fn_dict = dict(zip(id_lst, fn_lst))
+        img_dict = dict(zip(id_lst, img_lst))
+
+        dt = np.zeros(len_lst, dtype={'names':   ('id', 'dis', 'cls', 'close_to_mid'),
+                                      'formats': ('i4', 'f8', 'f8', 'f8')})
+        dt['id'] = id_lst
+        dt['dis'] = dis_lst
+        dt['cls'] = cls_lst
+        dt['close_to_mid'] = np.abs(dt['cls'] - 0.5)
+        # print('dt[:10]: ', dt[:10])
+
+        sorted_array = np.sort(dt, order='cls')
+        heads_cls = sorted_array[::-1][:top_N] if dict_inference_args["a2b"] else sorted_array[:top_N]
+        # tails_cls = sorted_array[:top_N] if dict_inference_args["a2b"] else sorted_array[::-1][:top_N]
+        # mids_cls = np.sort(dt, order='close_to_mid')[:top_N]
+
+        nrows = 10 # nrow (int, optional) – Number of images displayed in each row of the grid.
+        if top_N > 10:
+            nrows = math.ceil(math.sqrt(top_N))
+        else:
+            nrows = 1
+
+        target_domain = 'B' if dict_inference_args["a2b"] else 'A'
+        for df, pos in zip([heads_cls], ['heads_cls']):
+            fullname = os.path.join(output_dir, '{}_{}.jpg'.format(content_fn, pos))
+            fullname_txt = os.path.join(output_dir, '{}_{}.txt'.format(content_fn, pos))
+
+            vis_images = torch.cat([img_dict[id].unsqueeze(0) for id in df['id']], dim=0).float()
+            if content_front:
+                vis_images = torch.cat([content, vis_images], dim=0)
+            else:
+                vis_images = torch.cat([vis_images, content], dim=0)
+            vis_images = (vis_images + 1) / 2
+            vis_images.clamp_(0, 1)
+            # os.makedirs(os.path.dirname(fullname), exist_ok=True)
+            # print(f'vis_images.size(): {vis_images.size()}')
+            image_grid = torchvision.utils.make_grid(vis_images, nrow=nrows, padding=2, normalize=False)
+            # torchvision.utils.save_image(image_grid, path, nrow=10)
+            print('saving {}'.format(fullname))
+            torchvision.transforms.ToPILImage()(image_grid).save(fullname)
+            print('saving {}'.format(fullname_txt))
+            with open(fullname_txt, "w") as f:
+                if pos in ['heads_cls', 'tails_cls', 'mids_cls']:
+                    f.write(f'style_filename,probability_of_belonging_to_Domain{target_domain}\n')
+                    for id, probability in zip(df['id'], df['cls']):
+                        prob = f'{probability:.3f}' if dict_inference_args["a2b"] else f'{1 - probability:.3f}'
+                        f.write(f'{fn_dict[id]},{prob}\n')
+                else:
+                    print(f"Wrong pos value! pos = {pos}. Check Error!!")
 
 
     def _get_total_loss(self, gen_forward):
