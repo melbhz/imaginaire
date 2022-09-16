@@ -68,7 +68,7 @@ class dataset(Dataset):
 
 class style_dict_dataset(Dataset):
     def __init__(self, style_dict):
-        self.style_list = style_dict.items()
+        self.style_list = list(style_dict.items())
 
     def __getitem__(self, index):
         fn, style = self.style_list[index]
