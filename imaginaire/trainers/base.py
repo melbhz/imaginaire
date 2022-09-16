@@ -2040,14 +2040,13 @@ class BaseTrainer(object):
         debugging = False  # True
         print('# of samples for getting content and style code: %d' % len(data_loader))
 
-        with torch.no_grad():
-            content_dict = {}
-            content_list = []
-            content_fname_list = []
-            content_image_list = []
-            style_dict = {}
-            style_list = []
-            style_fname_list = []
+        content_dict = {}
+        content_list = []
+        content_fname_list = []
+        content_image_list = []
+        style_dict = {}
+        style_list = []
+        style_fname_list = []
         for it, data in enumerate(tqdm(data_loader)):
             data = self.start_of_iteration(data, current_iteration=-1)
             with torch.no_grad():
@@ -2075,9 +2074,9 @@ class BaseTrainer(object):
         #     os.makedirs(output_dir)
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
-        # content = contents[tsne_one_image_id].unsqueeze(0)
+        print('# of images to translate: %d' % len(content_list))
         for tsne_one_image_id in tqdm(range(10)):#len(content_list))):
-            print(f'{tsne_one_image_id}')
+            # print(f'{tsne_one_image_id}')
             content = content_list[tsne_one_image_id].unsqueeze(0)
             content_fn = content_fname_list[tsne_one_image_id]
             content_img = content_image_list[tsne_one_image_id]
@@ -2138,7 +2137,7 @@ class BaseTrainer(object):
         '''
 
     def translate_one_image(self, output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True):
-        print(f'translating {content_fn}.jpg')
+        # print(f'translating {content_fn}.jpg')
         # content_image_src = os.path.join(content_dirname, f'{content_fn}.jpg')
         # content_image_copy = os.path.join(output_dir, f'{content_fn}_a2b_{dict_inference_args["a2b"]}.jpg')
         # print(f'Make a copy of content image from {content_image_src} to \n {content_image_copy}')
@@ -2191,7 +2190,7 @@ class BaseTrainer(object):
 
             vis_images = torch.cat([img_dict[id].unsqueeze(0) for id in df['id']], dim=0).float()
             content_img = content_img.unsqueeze(0)
-            print(f'before torch.cat: content_img.size() = {content_img.size()}; vis_images.size() = {vis_images.size()}')
+            # print(f'before torch.cat: content_img.size() = {content_img.size()}; vis_images.size() = {vis_images.size()}')
             if content_front:
                 vis_images = torch.cat([content_img, vis_images], dim=0)
             else:
