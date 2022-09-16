@@ -2044,6 +2044,7 @@ class BaseTrainer(object):
             content_dict = {}
             content_list = []
             content_fname_list = []
+            content_image_list = []
             style_dict = {}
             style_list = []
             style_fname_list = []
@@ -2051,14 +2052,15 @@ class BaseTrainer(object):
             data = self.start_of_iteration(data, current_iteration=-1)
             with torch.no_grad():
                 # style_tensors, style_filenames, style_dirname = net_G.get_style_code(data, **vars(inference_args))
-                content, content_filenames, content_dirname, style, style_filenames, style_dirname = net_G.get_content_and_style_code(
-                    data, **vars(inference_args))
+                # content, content_filenames, content_dirname, style, style_filenames, style_dirname = net_G.get_content_and_style_code(data, **vars(inference_args))
+                content_images, content, content_filenames, content_dirname, _, style, style_filenames, style_dirname = net_G.get_contents_and_styles(data, **vars(inference_args))
 
-                for cont, fn in zip(content, content_filenames):
+                for cont, fn, img in zip(content, content_filenames, content_images):
                     if fn not in content_dict:
                         content_dict[fn] = cont
                         content_list.append(cont)
                         content_fname_list.append(fn)
+                        content_image_list.append(img)
 
                 for st, fn in zip(style, style_filenames):
                     if fn not in style_dict:
@@ -2078,7 +2080,8 @@ class BaseTrainer(object):
             print(f'{tsne_one_image_id}')
             content = content_list[tsne_one_image_id].unsqueeze(0)
             content_fn = content_fname_list[tsne_one_image_id]
-            self.translate_one_image(output_dir, net_G, classifier, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=top_N, content_front=content_front)
+            content_img = content_image_list[tsne_one_image_id]
+            self.translate_one_image(output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=top_N, content_front=content_front)
 
         self.save_style_codes(debugging, content_list, content_dict, styles, style_list, style_dict, content, style, style_fname_list, style_dirname, dict_inference_args, output_dir)
 
@@ -2134,7 +2137,7 @@ class BaseTrainer(object):
         path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
         '''
 
-    def translate_one_image(self, output_dir, net_G, classifier, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True):
+    def translate_one_image(self, output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True):
         print(f'The one image to translate is {content_fn}.jpg')
         content_image_src = os.path.join(content_dirname, f'{content_fn}.jpg')
         content_image_copy = os.path.join(output_dir, f'{content_fn}_a2b_{dict_inference_args["a2b"]}.jpg')
@@ -2187,10 +2190,11 @@ class BaseTrainer(object):
             fullname_txt = os.path.join(output_dir, '{}_{}.txt'.format(content_fn, pos))
 
             vis_images = torch.cat([img_dict[id].unsqueeze(0) for id in df['id']], dim=0).float()
+            print(f'before torch.cat: content_img.size() = {content_img.size()}; vis_images.size() = {vis_images.size()}')
             if content_front:
-                vis_images = torch.cat([content, vis_images], dim=0)
+                vis_images = torch.cat([content_img, vis_images], dim=0)
             else:
-                vis_images = torch.cat([vis_images, content], dim=0)
+                vis_images = torch.cat([vis_images, content_img], dim=0)
             vis_images = (vis_images + 1) / 2
             vis_images.clamp_(0, 1)
             # os.makedirs(os.path.dirname(fullname), exist_ok=True)

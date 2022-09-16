@@ -260,7 +260,35 @@ class Generator(nn.Module):
             style_dirname = style_dirnames[0] + '/' + style_key
             
         return content, content_filenames, content_dirname, style, style_filenames, style_dirname
-        
+
+    def get_contents_and_styles(self, data, a2b=True, random_style=True):
+        if a2b:
+            input_key = 'images_a'
+            content_encode = self.autoencoder_a.content_encoder
+            style_key = 'images_b'
+            style_encode = self.autoencoder_b.style_encoder
+        else:
+            input_key = 'images_b'
+            content_encode = self.autoencoder_b.content_encoder
+            style_key = 'images_a'
+            style_encode = self.autoencoder_a.style_encoder
+
+        if True:
+            content_images = data[input_key]
+            content = content_encode(content_images)
+            content_filenames = data['key'][input_key]['filename']
+            content_dirnames = data['key'][input_key]['lmdb_root']
+            content_dirname = content_dirnames[0] + '/' + input_key
+
+        if True:
+            style_images = data[style_key]
+            style = style_encode(style_images)
+            style_filenames = data['key'][style_key]['filename']
+            style_dirnames = data['key'][style_key]['lmdb_root']
+            style_dirname = style_dirnames[0] + '/' + style_key
+
+        return content_images, content, content_filenames, content_dirname, style_images, style, style_filenames, style_dirname
+
         
     def inference_tensor(self, content, style, a2b=True, random_style=True):
         if a2b:
