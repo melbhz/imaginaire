@@ -2157,11 +2157,11 @@ class BaseTrainer(object):
             for file_names, styles in style_dict_loader:
                 print(f'content.shape: {content.shape}, styles.shape: {styles.shape}')
                 # content = content.expand_as(styles)
-                content = content.expand(styles.size(dim=0), -1, -1, -1)
-                print(f'content.shape: {content.shape}, styles.shape: {styles.shape}')
+                contents = content.expand(styles.size(dim=0), -1, -1, -1)
+                print(f'contents.shape: {contents.shape}, styles.shape: {styles.shape}')
                 # style = style.unsqueeze(0)
                 with torch.no_grad():
-                    output_images = net_G.inference_tensor(content, styles, **vars(inference_args))
+                    output_images = net_G.inference_tensor(contents, styles, **vars(inference_args))
                     # file_names = np.atleast_1d(file_names)
                     classifier_outputs = classifier.inference(output_images)
                 assert len(output_images) == len(file_names) == len(classifier_outputs), 'Check Error!! len(output_images) == len(file_names) == len(classifier_outputs)'
