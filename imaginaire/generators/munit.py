@@ -298,8 +298,21 @@ class Generator(nn.Module):
 
         output_images = decode(content, style)
         return output_images
-        
-        
+
+    def inference_tensor_random(self, content, a2b=True, random_style=True):
+        if a2b:
+            decode = self.autoencoder_b.decode
+        else:
+            decode = self.autoencoder_a.decode
+
+        style_channels = self.autoencoder_a.style_channels
+        style = torch.randn(content.size(0), style_channels, 1, 1,
+                            device=torch.device('cuda'))
+
+        output_images = decode(content, style)
+        return output_images
+
+
 class AutoEncoder(nn.Module):
     r"""Improved MUNIT autoencoder.
 
