@@ -2028,7 +2028,9 @@ class BaseTrainer(object):
         path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
         '''
 
-    def test_classifier(self, data_loader, output_dir, classifier, inference_args, top_N=10, content_front=True, use_style_loader=True, batch_size_classifier=100, inference_resume=False, include_random_style=False):
+    def test_classifier(self, data_loader, output_dir, classifier, inference_args, top_N=10, content_front=True,
+                        use_style_loader=True, batch_size_classifier=100, inference_resume=False,
+                        include_random_style=False):
         if self.cfg.trainer.model_average_config.enabled:
             net_G = self.net_G.module.averaged_model
         else:
@@ -2052,7 +2054,8 @@ class BaseTrainer(object):
             with torch.no_grad():
                 # style_tensors, style_filenames, style_dirname = net_G.get_style_code(data, **vars(inference_args))
                 # content, content_filenames, content_dirname, style, style_filenames, style_dirname = net_G.get_content_and_style_code(data, **vars(inference_args))
-                content_images, content, content_filenames, content_dirname, _, style, style_filenames, style_dirname = net_G.get_contents_and_styles(data, **vars(inference_args))
+                content_images, content, content_filenames, content_dirname, _, style, style_filenames, style_dirname = net_G.get_contents_and_styles(
+                    data, **vars(inference_args))
 
                 for cont, fn, img in zip(content, content_filenames, content_images):
                     if fn not in content_dict:
@@ -2087,11 +2090,16 @@ class BaseTrainer(object):
             content = content_list[tsne_one_image_id].unsqueeze(0)
             content_fn = content_fname_list[tsne_one_image_id]
             content_img = content_image_list[tsne_one_image_id]
-            self.translate_one_image(output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=top_N, content_front=content_front, style_dict_loader=style_dict_loader, inference_resume=inference_resume, include_random_style=include_random_style)
+            self.translate_one_image(output_dir, net_G, classifier, content_img, content, content_fn, style_dict,
+                                     content_dirname, dict_inference_args, inference_args, top_N=top_N,
+                                     content_front=content_front, style_dict_loader=style_dict_loader,
+                                     inference_resume=inference_resume, include_random_style=include_random_style)
 
-        self.save_style_codes(debugging, content_list, content_dict, styles, style_list, style_dict, content, style, style_fname_list, style_dirname, dict_inference_args, output_dir)
+        self.save_style_codes(debugging, content_list, content_dict, styles, style_list, style_dict, content, style,
+                              style_fname_list, style_dirname, dict_inference_args, output_dir)
 
-    def save_style_codes(self, debugging, content_list, content_dict, styles, style_list, style_dict, content, style, style_fname_list, style_dirname, dict_inference_args, output_dir):
+    def save_style_codes(self, debugging, content_list, content_dict, styles, style_list, style_dict, content, style,
+                         style_fname_list, style_dirname, dict_inference_args, output_dir):
         if debugging:
             # print(f'contents.size(): {contents.size()}')
             print(f'len(content_list): {len(content_list)}')
@@ -2143,7 +2151,9 @@ class BaseTrainer(object):
         path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
         '''
 
-    def translate_one_image(self, output_dir, net_G, classifier, content_img, content, content_fn, style_dict, content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True, style_dict_loader=None, inference_resume=False, include_random_style=False):
+    def translate_one_image(self, output_dir, net_G, classifier, content_img, content, content_fn, style_dict,
+                            content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True,
+                            style_dict_loader=None, inference_resume=False, include_random_style=False):
         # print(f'translating {content_fn}.jpg')
         # content_image_src = os.path.join(content_dirname, f'{content_fn}.jpg')
         # content_image_copy = os.path.join(output_dir, f'{content_fn}_a2b_{dict_inference_args["a2b"]}.jpg')
@@ -2168,19 +2178,21 @@ class BaseTrainer(object):
                     output_images = net_G.inference_tensor(contents, styles, **vars(inference_args))
                     # file_names = np.atleast_1d(file_names)
                     classifier_outputs = classifier.inference(output_images)
-                assert len(output_images) == len(file_names) == len(classifier_outputs), 'Check Error!! len(output_images) == len(file_names) == len(classifier_outputs)'
+                assert len(output_images) == len(file_names) == len(
+                    classifier_outputs), 'Check Error!! len(output_images) == len(file_names) == len(classifier_outputs)'
                 for output_image, file_name, cls_score in zip(output_images, file_names, classifier_outputs):
                     fn_lst.append(file_name)
                     cls_lst.append(cls_score)
                     img_lst.append(output_image)
         else:
-            for file_names, style in style_dict.items(): #tqdm(style_dict.items()):  # zip(styles, style_fname_list):
+            for file_names, style in style_dict.items():  # tqdm(style_dict.items()):  # zip(styles, style_fname_list):
                 style = style.unsqueeze(0)
                 with torch.no_grad():
                     output_images = net_G.inference_tensor(content, style, **vars(inference_args))
                     file_names = np.atleast_1d(file_names)
                     classifier_outputs = classifier.inference(output_images)
-                assert len(output_images) == 1 and len(file_names) == 1 and len(classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(classifier_outputs) == 1'
+                assert len(output_images) == 1 and len(file_names) == 1 and len(
+                    classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(classifier_outputs) == 1'
                 for output_image, file_name, cls_score in zip(output_images, file_names, classifier_outputs):
                     fn_lst.append(file_name)
                     cls_lst.append(cls_score)
@@ -2206,7 +2218,7 @@ class BaseTrainer(object):
         fn_dict = dict(zip(id_lst, fn_lst))
         img_dict = dict(zip(id_lst, img_lst))
 
-        dt = np.zeros(len_lst, dtype={'names':   ('id', 'cls', 'close_to_mid'),
+        dt = np.zeros(len_lst, dtype={'names': ('id', 'cls', 'close_to_mid'),
                                       'formats': ('i4', 'f8', 'f8')})
         dt['id'] = id_lst
         dt['cls'] = cls_lst
