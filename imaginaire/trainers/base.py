@@ -2030,7 +2030,7 @@ class BaseTrainer(object):
 
     def test_classifier(self, data_loader, output_dir, classifier, inference_args, top_N=10, content_front=True,
                         use_style_loader=True, batch_size_classifier=100, inference_resume=False,
-                        include_random_style=False):
+                        include_random_style=False, txt_off=False):
         if self.cfg.trainer.model_average_config.enabled:
             net_G = self.net_G.module.averaged_model
         else:
@@ -2093,7 +2093,8 @@ class BaseTrainer(object):
             self.translate_one_image(output_dir, net_G, classifier, content_img, content, content_fn, style_dict,
                                      content_dirname, dict_inference_args, inference_args, top_N=top_N,
                                      content_front=content_front, style_dict_loader=style_dict_loader,
-                                     inference_resume=inference_resume, include_random_style=include_random_style)
+                                     inference_resume=inference_resume, include_random_style=include_random_style,
+                                     txt_off=txt_off)
 
         self.save_style_codes(debugging, content_list, content_dict, styles, style_list, style_dict, content, style,
                               style_fname_list, style_dirname, dict_inference_args, output_dir)
@@ -2153,7 +2154,8 @@ class BaseTrainer(object):
 
     def translate_one_image(self, output_dir, net_G, classifier, content_img, content, content_fn, style_dict,
                             content_dirname, dict_inference_args, inference_args, top_N=10, content_front=True,
-                            style_dict_loader=None, inference_resume=False, include_random_style=False):
+                            style_dict_loader=None, inference_resume=False, include_random_style=False,
+                            txt_off=False):
         # print(f'translating {content_fn}.jpg')
         # content_image_src = os.path.join(content_dirname, f'{content_fn}.jpg')
         # content_image_copy = os.path.join(output_dir, f'{content_fn}_a2b_{dict_inference_args["a2b"]}.jpg')
@@ -2256,15 +2258,17 @@ class BaseTrainer(object):
             # torchvision.utils.save_image(image_grid, path, nrow=10)
             print('saving {}'.format(fullname))
             torchvision.transforms.ToPILImage()(image_grid).save(fullname)
-            # print('saving {}'.format(fullname_txt))
-            with open(fullname_txt, "w") as f:
-                if pos in ['heads_cls', 'tails_cls', 'mids_cls']:
-                    f.write(f'style_filename,probability_of_belonging_to_Domain{target_domain}\n')
-                    for id, probability in zip(df['id'], df['cls']):
-                        prob = f'{probability:.3f}' if dict_inference_args["a2b"] else f'{1 - probability:.3f}'
-                        f.write(f'{fn_dict[id]},{prob}\n')
-                else:
-                    print(f"Wrong pos value! pos = {pos}. Check Error!!")
+
+            if not txt_off:
+                # print('saving {}'.format(fullname_txt))
+                with open(fullname_txt, "w") as f:
+                    if pos in ['heads_cls', 'tails_cls', 'mids_cls']:
+                        f.write(f'style_filename,probability_of_belonging_to_Domain{target_domain}\n')
+                        for id, probability in zip(df['id'], df['cls']):
+                            prob = f'{probability:.3f}' if dict_inference_args["a2b"] else f'{1 - probability:.3f}'
+                            f.write(f'{fn_dict[id]},{prob}\n')
+                    else:
+                        print(f"Wrong pos value! pos = {pos}. Check Error!!")
 
 
     def _get_total_loss(self, gen_forward):
