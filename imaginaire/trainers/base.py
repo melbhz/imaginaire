@@ -2030,7 +2030,7 @@ class BaseTrainer(object):
 
     def test_classifier(self, data_loader, output_dir, classifier, inference_args, top_N=10, content_front=True,
                         use_style_loader=True, batch_size_classifier=100, inference_resume=False,
-                        include_random_style=False, txt_off=False):
+                        include_random_style=False, txt_off=False, all_random_styles=False, batchsize_inference=1, sample_multiplier=10):
         if self.cfg.trainer.model_average_config.enabled:
             net_G = self.net_G.module.averaged_model
         else:
@@ -2090,11 +2090,19 @@ class BaseTrainer(object):
             content = content_list[tsne_one_image_id].unsqueeze(0)
             content_fn = content_fname_list[tsne_one_image_id]
             content_img = content_image_list[tsne_one_image_id]
-            self.translate_one_image(output_dir, net_G, classifier, content_img, content, content_fn, style_dict,
-                                     content_dirname, dict_inference_args, inference_args, top_N=top_N,
-                                     content_front=content_front, style_dict_loader=style_dict_loader,
-                                     inference_resume=inference_resume, include_random_style=include_random_style,
-                                     txt_off=txt_off)
+            if all_random_styles:
+                self.translate_one_image_random_styles(output_dir, net_G, classifier, content_img, content, content_fn,
+                                                       dict_inference_args, inference_args, top_N=top_N,
+                                                       batchsize_inference=batchsize_inference,
+                                                       sample_multiplier=sample_multiplier, content_front=content_front,
+                                                       inference_resume=inference_resume,
+                                                       txt_off=txt_off)
+            else:
+                self.translate_one_image(output_dir, net_G, classifier, content_img, content, content_fn, style_dict,
+                                         content_dirname, dict_inference_args, inference_args, top_N=top_N,
+                                         content_front=content_front, style_dict_loader=style_dict_loader,
+                                         inference_resume=inference_resume, include_random_style=include_random_style,
+                                         txt_off=txt_off)
 
         self.save_style_codes(debugging, content_list, content_dict, styles, style_list, style_dict, content, style,
                               style_fname_list, style_dirname, dict_inference_args, output_dir)
@@ -2269,6 +2277,97 @@ class BaseTrainer(object):
                             f.write(f'{fn_dict[id]},{prob}\n')
                     else:
                         print(f"Wrong pos value! pos = {pos}. Check Error!!")
+
+    def translate_one_image_random_styles(self, output_dir, net_G, classifier, content_img, content, content_fn,
+                                          dict_inference_args, inference_args, top_N=10, batchsize_inference=1,
+                                          sample_multiplier=10, content_front=True, inference_resume=False,
+                                          txt_off=False):
+        out_fn = f'{content_fn}_heads_cls.jpg'
+        if inference_resume:
+            if os.path.exists(os.path.join(output_dir, f'{out_fn}')):
+                print(f'existed, skipping {out_fn}')
+                return
+
+        fn_lst = []
+        cls_lst = []
+        img_lst = []
+
+        for i in range(top_N * sample_multiplier):
+            with torch.no_grad():
+                contents = content.expand(batchsize_inference, -1, -1, -1)
+                output_images = net_G.inference_tensor_random(contents, **vars(inference_args))
+                file_names = [f'random_style_{i}_{j}' for j in range(batchsize_inference)]
+                file_names = np.atleast_1d(file_names)
+                classifier_outputs = classifier.inference(output_images)
+            assert len(output_images) == 1 and len(file_names) == 1 and len(
+                classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(classifier_outputs) == 1'
+            for output_image, file_name, cls_score in zip(output_images, file_names, classifier_outputs):
+                fn_lst.append(file_name)
+                cls_lst.append(cls_score)
+                img_lst.append(output_image)
+
+        len_lst = len(fn_lst)
+        assert len(cls_lst) == len_lst and len(img_lst) == len_lst, 'Check Error!! Mismatching list length!'
+
+        id_lst = list(range(len_lst))
+        fn_dict = dict(zip(id_lst, fn_lst))
+        img_dict = dict(zip(id_lst, img_lst))
+
+        dt = np.zeros(len_lst, dtype={'names': ('id', 'cls', 'close_to_mid'),
+                                      'formats': ('i4', 'f8', 'f8')})
+        dt['id'] = id_lst
+        dt['cls'] = cls_lst
+        dt['close_to_mid'] = np.abs(dt['cls'] - 0.5)
+        # print('dt[:10]: ', dt[:10])
+
+        sorted_array = np.sort(dt, order='cls')
+        heads_cls = sorted_array[::-1][:top_N] if dict_inference_args["a2b"] else sorted_array[:top_N]
+        # tails_cls = sorted_array[:top_N] if dict_inference_args["a2b"] else sorted_array[::-1][:top_N]
+        # mids_cls = np.sort(dt, order='close_to_mid')[:top_N]
+
+        # nrow (int, optional) – Number of images displayed in each row of the grid.
+        if top_N > 10:
+            nrows = math.ceil(math.sqrt(top_N))
+        else:
+            nrows = top_N + 1
+
+        txt_out_dir = os.path.join(output_dir, 'txt')
+        if not os.path.exists(txt_out_dir):
+            os.makedirs(txt_out_dir, exist_ok=True)
+            print(f'created {txt_out_dir}')
+
+        target_domain = 'B' if dict_inference_args["a2b"] else 'A'
+        df = heads_cls
+        pos = 'heads_cls'
+        fullname = os.path.join(output_dir, out_fn)
+        fullname_txt = os.path.join(txt_out_dir, f'{content_fn}_heads_cls.txt')
+
+        vis_images = torch.cat([img_dict[id].unsqueeze(0) for id in df['id']], dim=0).float()
+        content_img = content_img.unsqueeze(0)
+        # print(f'before torch.cat: content_img.size() = {content_img.size()}; vis_images.size() = {vis_images.size()}')
+        if content_front:
+            vis_images = torch.cat([content_img, vis_images], dim=0)
+        else:
+            vis_images = torch.cat([vis_images, content_img], dim=0)
+        vis_images = (vis_images + 1) / 2
+        vis_images.clamp_(0, 1)
+        # os.makedirs(os.path.dirname(fullname), exist_ok=True)
+        # print(f'vis_images.size(): {vis_images.size()}')
+        image_grid = torchvision.utils.make_grid(vis_images, nrow=nrows, padding=2, normalize=False)
+        # torchvision.utils.save_image(image_grid, path, nrow=10)
+        print('saving {}'.format(fullname))
+        torchvision.transforms.ToPILImage()(image_grid).save(fullname)
+
+        if not txt_off:
+            # print('saving {}'.format(fullname_txt))
+            with open(fullname_txt, "w") as f:
+                if pos in ['heads_cls', 'tails_cls', 'mids_cls']:
+                    f.write(f'style_filename,probability_of_belonging_to_Domain{target_domain}\n')
+                    for id, probability in zip(df['id'], df['cls']):
+                        prob = f'{probability:.3f}' if dict_inference_args["a2b"] else f'{1 - probability:.3f}'
+                        f.write(f'{fn_dict[id]},{prob}\n')
+                else:
+                    print(f"Wrong pos value! pos = {pos}. Check Error!!")
 
 
     def _get_total_loss(self, gen_forward):

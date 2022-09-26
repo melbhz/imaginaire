@@ -52,6 +52,8 @@ def parse_args():
     parser.add_argument('--inference_resume', action='store_true')
     parser.add_argument('--include_random_style', action='store_true')
     parser.add_argument('--txt_off', action='store_true')
+    parser.add_argument('--all_random_styles', action='store_true')
+    parser.add_argument('--batchsize_inference', type=int, default=4)
 
     args = parser.parse_args()
     return args
@@ -126,7 +128,8 @@ def main():
                                 content_front=not args.not_content_front, use_style_loader=args.use_style_loader,
                                 batch_size_classifier=args.batch_size_classifier,
                                 inference_resume=args.inference_resume, include_random_style=args.include_random_style,
-                                txt_off=args.txt_off)
+                                txt_off=args.txt_off, all_random_styles=args.all_random_styles,
+                                batchsize_inference=args.batchsize_inference, sample_multiplier=10)
     else:
         trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only,
                            args.all_styles, args.simple_grid, args.grid_styles, cfg.inference_args)
