@@ -2299,8 +2299,8 @@ class BaseTrainer(object):
                 file_names = [f'random_style_{i}_{j}' for j in range(batchsize_inference)]
                 file_names = np.atleast_1d(file_names)
                 classifier_outputs = classifier.inference(output_images)
-            assert len(output_images) == 1 and len(file_names) == 1 and len(
-                classifier_outputs) == 1, 'Check Error!! len(output_images) == 1 and len(file_names) == 1 and len(classifier_outputs) == 1'
+            assert len(output_images) == len(file_names) == len(
+                classifier_outputs), 'Check Error!! len(output_images) == len(file_names) == len(classifier_outputs)'
             for output_image, file_name, cls_score in zip(output_images, file_names, classifier_outputs):
                 fn_lst.append(file_name)
                 cls_lst.append(cls_score)
