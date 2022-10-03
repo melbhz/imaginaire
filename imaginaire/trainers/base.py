@@ -2441,7 +2441,7 @@ class BaseTrainer(object):
         content_data['score'] = np.asarray(content_score_list)
         style_data['score'] = np.asarray(style_score_list)
 
-        scores_pkl = os.path.join(output_dir, f'styles_a2b_{dict_inference_args["a2b"]}_scores.pkl')
+        scores_pkl = os.path.join(output_dir, f'scores_a2b_{dict_inference_args["a2b"]}.pkl')
         print('Saving content and style scores to {}'.format(scores_pkl))
         data = {'contents': content_data, 'styles': style_data}
         import pickle
