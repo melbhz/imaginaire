@@ -2370,6 +2370,84 @@ class BaseTrainer(object):
                     print(f"Wrong pos value! pos = {pos}. Check Error!!")
 
 
+    def test_classifier_score_map(self, data_loader, output_dir, classifier, inference_args):
+        if self.cfg.trainer.model_average_config.enabled:
+            net_G = self.net_G.module.averaged_model
+        else:
+            net_G = self.net_G.module
+        net_G.eval()
+
+        dict_inference_args = dict(inference_args)
+        print(f"dict_inference_args: {dict_inference_args}")
+        print('# of samples for getting content and style code: %d' % len(data_loader))
+
+        content_dict = {}
+        content_list = []
+        content_fname_list = []
+        content_image_list = []
+        style_dict = {}
+        style_list = []
+        style_fname_list = []
+        style_image_list = []
+        for it, data in enumerate(tqdm(data_loader)):
+            data = self.start_of_iteration(data, current_iteration=-1)
+            with torch.no_grad():
+                content_images, content, content_filenames, content_dirname, style_images, style, style_filenames, style_dirname = net_G.get_contents_and_styles(
+                    data, **vars(inference_args))
+
+                for cont, fn, img in zip(content, content_filenames, content_images):
+                    if fn not in content_dict:
+                        content_dict[fn] = cont
+                        content_list.append(cont)
+                        content_fname_list.append(fn)
+                        content_image_list.append(img)
+
+                for st, fn, img in zip(style, style_filenames, style_images):
+                    if fn not in style_dict:
+                        style_dict[fn] = st
+                        style_list.append(st)
+                        style_fname_list.append(fn)
+                        style_image_list.append(img)
+
+        styles = torch.cat([x.unsqueeze(0) for x in style_list], 0)
+
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+            print(f'created {output_dir}')
+
+        content_score_list = []
+        for tsne_one_image_id in tqdm(range(len(content_list))):
+            classifier_output = classifier.inference_one_image(content_image_list[tsne_one_image_id])
+            content_score_list.append(classifier_output)
+
+        style_score_list = []
+        for tsne_one_image_id in tqdm(range(len(content_list))):
+            classifier_output = classifier.inference_one_image(style_image_list[tsne_one_image_id])
+            style_score_list.append(classifier_output)
+
+        self.save_classifier_scores(output_dir, content_dirname, content_fname_list, content_score_list, style_dirname, style_fname_list, style_score_list, styles, dict_inference_args)
+
+    def save_classifier_scores(self, output_dir, content_dirname, content_fname_list, content_score_list, style_dirname, style_fname_list, style_score_list, styles, dict_inference_args):
+        content_data = {}
+        style_data = {}
+        # content_data['data'] = contents.detach().cpu().squeeze().numpy()
+        style_data['data'] = styles.detach().cpu().squeeze().numpy()
+        content_data['filename'] = np.asarray(content_fname_list)
+        style_data['filename'] = np.asarray(style_fname_list)
+        content_data['dirname'] = content_dirname
+        style_data['dirname'] = style_dirname
+        content_data['a2b'] = dict_inference_args["a2b"]
+        style_data['a2b'] = dict_inference_args["a2b"]
+        content_data['score'] = np.asarray(content_score_list)
+        style_data['score'] = np.asarray(style_score_list)
+
+        scores_pkl = os.path.join(output_dir, f'styles_a2b_{dict_inference_args["a2b"]}_scores.pkl')
+        print('Saving content and style scores to {}'.format(scores_pkl))
+        data = {'contents': content_data, 'styles': style_data}
+        import pickle
+        with open(scores_pkl, 'wb') as f:
+            pickle.dump(data, f)
+
     def _get_total_loss(self, gen_forward):
         r"""Return the total loss to be backpropagated.
         Args:

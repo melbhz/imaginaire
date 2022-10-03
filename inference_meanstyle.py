@@ -55,6 +55,8 @@ def parse_args():
     parser.add_argument('--all_random_styles', action='store_true')
     parser.add_argument('--batchsize_inference', type=int, default=4)
 
+    parser.add_argument('--save_classifier_score', action='store_true')
+
     args = parser.parse_args()
     return args
 
@@ -130,6 +132,11 @@ def main():
                                 inference_resume=args.inference_resume, include_random_style=args.include_random_style,
                                 txt_off=args.txt_off, all_random_styles=args.all_random_styles,
                                 batchsize_inference=args.batchsize_inference, sample_multiplier=10)
+    elif args.save_classifier_score:
+        import train_classifier
+        classifier = train_classifier.ClassifierTrainer(cfg=cfg, model=train_classifier.Net())
+        classifier.load_checkpoint(checkpoint_path=args.checkpoint_classifier)
+        trainer.test_classifier_score_map(test_data_loader, args.output_dir, classifier, cfg.inference_args)
     else:
         trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only,
                            args.all_styles, args.simple_grid, args.grid_styles, cfg.inference_args)
