@@ -2421,7 +2421,7 @@ class BaseTrainer(object):
             content_score_list.append(classifier_output)
 
         style_score_list = []
-        for tsne_one_image_id in tqdm(range(len(content_list))):
+        for tsne_one_image_id in tqdm(range(len(style_list))):
             classifier_output = classifier.inference_one_image(style_image_list[tsne_one_image_id])
             style_score_list.append(classifier_output)
 
