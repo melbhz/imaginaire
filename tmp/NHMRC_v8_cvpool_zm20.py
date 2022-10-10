@@ -466,11 +466,127 @@ def run_all_five_image_tiles_combination():
         save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=3, IMGSIZE=256*5, NUM_CPUS=24, images_a='images_a',
                               images_b='images_b', split_percentage=10)
     print('run_all_five_image_tiles_combination() Run Finished!')
+
+
+def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM_CPUS = 24):
+    '''
+    Args:
+        FROM_DIR:
+        N_XY: the "Kernel"
+        N_STEP: the "Stride", recommend N_STEP=N_XY
+        IMGSIZE: result image size in pixels, recommend 256*N_XY
+        NUM_CPUS: should be le <= n of cpus for partitions See https://dashboard.hpc.unimelb.edu.au/status_specs/
+    Returns:
+        None
+        Result images saved in folders
+    '''
+    if not os.path.exists(BASE_DIR):
+        print("{} not exist!".format(BASE_DIR))
+        return
+
+    if True:
+        from_dir = os.path.join(BASE_DIR, FROM_FOLDER)
+        if not os.path.exists(from_dir):
+            print("{} not exist!".format(from_dir))
+            return
+
+        new_folder = f'{FROM_FOLDER}_k{N_XY}_s{N_STEP}_p{IMGSIZE}'
+        to_dir = os.path.join(BASE_DIR, new_folder)
+        if not os.path.exists(to_dir):
+            print("{} not exist, creating it...".format(to_dir))
+            os.makedirs(to_dir)
+
+        dirList = os.listdir(to_dir)
+        downloadedImagesDict = {}
+        start = time.time()
+        for image in dirList:
+            downloadedImagesDict[image] = image
+        print(f'already saved images: {len(downloadedImagesDict)}')
+        print(f'time last: {time.time() - start}')
+
+        start = time.time()
+        onlyfiles = os.listdir(from_dir)
+        # os.listdir(FROM_DIR) is fast but not as safe as using [f for f in os.listdir(FROM_DIR) if os.path.isfile(os.path.join(FROM_DIR, f))]
+        print(f'from dir images: {len(onlyfiles)}')
+        print(f'time last: {time.time() - start}')
+
+        fn_dict = {filename.strip().split('~')[1]: filename for filename in onlyfiles}
+        fn_array = np.array(list(fn_dict.items()))
+        print(f'fn_array.shape: {fn_array.shape}')
+
+        coords = [[int(x) for x in coord.split(',')] for coord in fn_dict.keys()]
+        coord_array = np.array(coords) #, dtype=np.uint32)
+        print(f'coord_array.shape: {coord_array.shape}')
+        print(f'coord_array.dtype: {coord_array.dtype}')
+        print(f'coord_array[:5] {coord_array[:5]}')
+
+        minXY = np.amin(coord_array[:, :2], axis=0)
+        maxXY = np.amax(coord_array[:, :2], axis=0)
+        # minXY = np.amin(data[:, :2].astype(np.int), axis=0)
+        # maxXY = np.amax(data[:, :2].astype(np.int), axis=0)
+        print('minXY, maxXY = {}, {}'.format(minXY, maxXY))
+        # return
+
+        start = time.time()
+        filename_list = []
+
+        for x in range(minXY[0], maxXY[0], N_STEP):
+            for y in range(minXY[1], maxXY[1], N_STEP):
+                newfilename = str(x) + ',' + str(y) + '.jpg'
+                xy = str(x) + ',' + str(y)
+                if newfilename in downloadedImagesDict or xy not in fn_dict:
+                    continue
+                else:
+                    filename_list.append(newfilename)
+        print(f'images to get: {len(filename_list)}')
+
+        num_point_per_cpu = math.ceil(len(filename_list) / NUM_CPUS)
+        filename_list_nested = [filename_list[i * num_point_per_cpu:(i + 1) * num_point_per_cpu]
+                                if (i + 1) * num_point_per_cpu < len(filename_list)
+                                else filename_list[i * num_point_per_cpu:]
+                                for i in range(NUM_CPUS)]
+        if len(filename_list_nested) != NUM_CPUS:
+            print("!!!!!!!!!!!!!!!!!!!!! len(filename_list_nested) != NUM_CPUS")
+            return
+
+        pool = mp.Pool()
+        for i in range(NUM_CPUS):
+            pool.apply_async(merge_image_list_tile, args=(i, filename_list_nested[i], fn_dict, from_dir, to_dir, IMGSIZE, N_XY))
+
+        '''    
+        results = []
+        for i in range(len(filename_list)):
+            results.append(pool.apply_async(merge_image, args=(i,filename_list[i])))
+        '''
+
+        pool.close()
+        pool.join()
+        print("zoom up conversion finished! - time last: {time.time() - start}")
+
+def save_zoom20_burwood_chatswood():
+    SA2s = [11390, 11398, 11470]
+    BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/age'
+    for sa2 in SA2s:
+        save_combined_tile_images(BASE_DIR, sa2, N_XY=2, N_STEP=2, IMGSIZE=256*1, NUM_CPUS=24)
+    print('save_zoom20_burwood_chatswood() Run Finished!')
+
+def save_tile5_burwood_chatswood():
+    SA2s = [11390, 11398, 11470]
+    BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/age'
+    for sa2 in SA2s:
+        save_combined_tile_images(BASE_DIR, sa2, N_XY=5, N_STEP=5, IMGSIZE=256*1, NUM_CPUS=24)
+    print('save_tile5_burwood_chatswood() Run Finished!')
+
+
 if __name__ == "__main__":
     # save_zoom_up_images()
     # save_zoom_up_large_images()
     # save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY=5, IMGSIZE=256, NUM_CPUS=24)
     # test()
-    run_all_zoom20_combination()
-    run_all_five_image_tiles_combination()
+    # run_all_zoom20_combination()
+    # run_all_five_image_tiles_combination()
+
+    save_zoom20_burwood_chatswood()
+    save_tile5_burwood_chatswood()
+
 
