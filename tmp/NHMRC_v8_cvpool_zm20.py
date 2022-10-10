@@ -571,7 +571,7 @@ def save_zoom20_burwood_chatswood():
     print('save_zoom20_burwood_chatswood() Run Finished!')
 
 def save_tile5_burwood_chatswood():
-    SA2s = [11390, 11398, 11470]
+    SA2s = ['11390', '11398', '11470']
     BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/age'
     for sa2 in SA2s:
         save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=5, N_STEP=5, IMGSIZE=256*1, NUM_CPUS=24)
