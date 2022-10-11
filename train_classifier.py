@@ -726,7 +726,7 @@ def main_inference(args, redirect_stdout=False):
         print(f'main: redirecting sys.stdout to file {log_file}')
         Origin_Stdout = sys.stdout
         sys.stdout = open(log_file, "a")
-        print(f'{datetime.datetime.now().strftime("%d-%b-%Y, %H:%M:%S.%f")}\n')
+        print(f'\n\n{datetime.datetime.now().strftime("%d-%b-%Y, %H:%M:%S.%f")}')
 
     test_loader = get_test_dataloader(cfg)
     tester = MultiModelTester(cfg, test_loader)
