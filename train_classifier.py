@@ -643,7 +643,7 @@ def to_cpu(data):
 # ## 3. Train Model
 def parse_args():
     parser = argparse.ArgumentParser(description='Training')
-    parser.add_argument('--config', help='Path to the training config file.', required=True)
+    parser.add_argument('--config', help='Path to the training config file.')#, required=True)
     parser.add_argument('--logdir', help='Dir for saving logs and models.')
     parser.add_argument('--checkpoint', default='', help='Checkpoint path.')
     parser.add_argument('--seed', type=int, default=2, help='Random seed.')
@@ -651,12 +651,21 @@ def parse_args():
     parser.add_argument('--n_epochs', type=int, default=100, help='Max num of epochs.')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--resume', type=int)
+
+    parser.add_argument('--multi_model_inference', action='store_true')
+    parser.add_argument('--output_dir_inference', help='Dir for saving inference results.')
+    parser.add_argument('--config_inference', help='Path to the inference config file.')
+
     args = parser.parse_args()
     return args
 
 
 def main(redirect_stdout=False):
     args = parse_args()
+    if args.multi_model_inference:
+        main_inference(args, redirect_stdout=redirect_stdout)
+        return
+
     set_random_seed(args.seed)
     cfg = Config(args.config)
     cfg.date_uid, cfg.logdir = init_logging(args.config, args.logdir)
@@ -700,3 +709,125 @@ def main(redirect_stdout=False):
 
 if __name__ == "__main__":
     main(redirect_stdout=True)
+
+
+def main_inference(args, redirect_stdout=False):
+    # args = parse_args()
+    # set_random_seed(args.seed)
+    cfg = get_config(args.config_inference)
+    output_dir = args.output_dir_inference
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+        print(f'created output dir {output_dir}')
+
+    if redirect_stdout:
+        log_file = os.path.join(output_dir, 'logging.txt')
+        print(f'main: redirecting sys.stdout to file {log_file}')
+        Origin_Stdout = sys.stdout
+        sys.stdout = open(log_file, "a")
+
+    test_loader = get_test_dataloader(cfg)
+    tester = MultiModelTester(cfg, test_loader)
+    tester.load_checkpoint()
+    tester.multi_model_inference(output_dir)
+    print('Done with multi_model_inference!!!')
+
+    if redirect_stdout:
+        sys.stdout.close()
+        sys.stdout = Origin_Stdout
+        print("sys.stdout recovered.")
+
+    return
+
+def get_config(config):
+    import yaml
+    with open(config, 'r') as stream:
+        return yaml.load(stream, Loader=yaml.FullLoader)
+
+def get_test_dataloader(cfg):
+    transform = transforms.Compose([
+        transforms.Resize((256, 256)),
+        # transforms.RandomResizedCrop(256),
+        # transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+    test_dir = cfg.test_data.roots[0]
+    batch_size = cfg.batch_size
+    print(f'test_dir: {test_dir}')
+    test_list = glob.glob(os.path.join(test_dir, '*.jpg')) #f'*.{cfg.ext}'
+    print(f'len(test_list): {len(test_list)}')
+    test_data = test_dataset(test_list, transform=transform)
+    test_loader = torch.utils.data.DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False)
+    print(f'len(test_data): {len(test_data)} \t len(test_loader): {len(test_loader)}')
+    print(f'image size: {test_data[0][0].shape}')
+    return test_loader
+
+class test_dataset(Dataset):
+    def __init__(self, file_list, transform=None):
+        self.file_list = file_list
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.file_list)
+
+    def __getitem__(self, idx):
+        img_path = self.file_list[idx]
+        image = Image.open(img_path)
+        if self.transform is not None:
+            image = self.transform(image)
+        return image, img_path
+
+class MultiModelTester():
+    def __init__(self, cfg, test_loader):
+        print('Setup MultiModelTester.')
+        self.cfg = cfg
+        self.test_loader = test_loader
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        print(f'device: {self.device}')
+
+        self.N_models = len(self.cfg.check_points)
+        print(f'number of classifiers: {self.N_models}\n {self.cfg.check_points}')
+        self.models = [Net().to(self.device) for i in range(self.N_models)]
+        self.model_names = ['' for i in range(self.N_models)]
+        # self.classes = ('0', '1')
+
+    def load_checkpoint(self):
+        for i, (k, v) in enumerate(self.cfg.check_points.items()):
+            if os.path.exists(v):
+                try:
+                    self.model_names[i] = k
+                    checkpoint = torch.load(v)
+                    self.models[i].load_state_dict(checkpoint['model'], strict=False)
+                except Exception:
+                    raise ValueError(f'Checkpoint {k}: {v} cannot be loaded.')
+                print(f'checkpoint loaded. {k}: {v}')
+            else:
+                print(f'Nooooooooo! No checkpoint found for {k}: {v}')
+
+    def multi_model_inference(self, output_dir):
+        score_data = {}
+        for model in self.models:
+            model.eval()
+
+        with torch.no_grad():
+            for images, paths in self.test_loader:
+                images = images.to(self.device)
+
+                scores_list = []
+                for model in self.models:
+                    preds = model(images)
+                    preds_for_1 = F.softmax(preds, dim=1)[:, 1]#.tolist()
+                    scores_list.append(preds_for_1)
+
+                scores = torch.cat([x.unsqueeze(-1) for x in scores_list], -1)
+                scores = scores.detach().cpu().squeeze().numpy()
+
+                for i, path in enumerate(paths):
+                    score_data[path] = scores[i, :]
+
+        scores_pkl = os.path.join(output_dir, 'classifier_scores.pkl')
+        print('Saving multi model classifier scores to {}'.format(scores_pkl))
+        import pickle
+        with open(scores_pkl, 'wb') as f:
+            pickle.dump(score_data, f)
