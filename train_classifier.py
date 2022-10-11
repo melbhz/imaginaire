@@ -726,6 +726,7 @@ def main_inference(args, redirect_stdout=False):
         print(f'main: redirecting sys.stdout to file {log_file}')
         Origin_Stdout = sys.stdout
         sys.stdout = open(log_file, "a")
+        print(f'{datetime.now().strftime("%d-%b-%Y, %H:%M:%S.%f")}\n')
 
     test_loader = get_test_dataloader(cfg)
     tester = MultiModelTester(cfg, test_loader)
@@ -818,19 +819,19 @@ class MultiModelTester():
                 scores_list = []
                 for model in self.models:
                     preds = model(images)
-                    print(f'preds: {preds}')
+                    # print(f'preds: {preds}')
                     preds_for_1 = F.softmax(preds, dim=1)[:, 1]#.tolist()
                     scores_list.append(preds_for_1)
-                    print(f'scores_list: {scores_list}')
+                    # print(f'scores_list: {scores_list}')
 
                 scores = torch.cat([x.unsqueeze(-1) for x in scores_list], -1)
-                print(f'scores1: {scores}')
+                # print(f'scores1: {scores}')
                 scores = scores.detach().cpu().squeeze().numpy()
-                print(f'scores2: {scores}')
+                # print(f'scores2: {scores}')
 
                 for i, path in enumerate(paths):
                     score_data[path] = scores[i, :]
-                print(f'score_data: {score_data}')
+                # print(f'score_data: {score_data}')
 
         scores_pkl = os.path.join(output_dir, 'classifier_scores.pkl')
         print('Saving multi model classifier scores to {}'.format(scores_pkl))
