@@ -715,6 +715,7 @@ def main_inference(args, redirect_stdout=False):
     # args = parse_args()
     # set_random_seed(args.seed)
     cfg = get_config(args.config_inference)
+    print(f'cfg: {cfg}')
     output_dir = args.output_dir_inference
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
