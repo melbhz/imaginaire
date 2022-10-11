@@ -753,8 +753,8 @@ def get_test_dataloader(cfg):
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
-    test_dir = cfg.test_data.roots[0]
-    batch_size = cfg.batch_size
+    test_dir = cfg['test_data']['roots'][0]
+    batch_size = cfg['batch_size']
     print(f'test_dir: {test_dir}')
     test_list = glob.glob(os.path.join(test_dir, '*.jpg')) #f'*.{cfg.ext}'
     print(f'len(test_list): {len(test_list)}')
@@ -787,14 +787,14 @@ class MultiModelTester():
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f'device: {self.device}')
 
-        self.N_models = len(self.cfg.check_points)
-        print(f'number of classifiers: {self.N_models}\n {self.cfg.check_points}')
+        self.N_models = len(self.cfg['check_points'])
+        print(f'number of classifiers: {self.N_models}\n {self.cfg["check_points"]}')
         self.models = [Net().to(self.device) for i in range(self.N_models)]
         self.model_names = ['' for i in range(self.N_models)]
         # self.classes = ('0', '1')
 
     def load_checkpoint(self):
-        for i, (k, v) in enumerate(self.cfg.check_points.items()):
+        for i, (k, v) in enumerate(self.cfg['check_points'].items()):
             if os.path.exists(v):
                 try:
                     self.model_names[i] = k
