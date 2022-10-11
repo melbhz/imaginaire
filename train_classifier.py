@@ -715,7 +715,7 @@ def main_inference(args, redirect_stdout=False):
     # args = parse_args()
     # set_random_seed(args.seed)
     cfg = get_config(args.config_inference)
-    print(f'cfg: {cfg}')
+    # print(f'cfg: {cfg}')
     output_dir = args.output_dir_inference
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
@@ -781,14 +781,14 @@ class test_dataset(Dataset):
 
 class MultiModelTester():
     def __init__(self, cfg, test_loader):
-        print('Setup MultiModelTester.')
+        print('Setup MultiModelTester...')
         self.cfg = cfg
         self.test_loader = test_loader
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f'device: {self.device}')
 
         self.N_models = len(self.cfg['check_points'])
-        print(f'number of classifiers: {self.N_models}\n {self.cfg["check_points"]}')
+        print(f'number of classifiers: {self.N_models}\n They are {self.cfg["check_points"]}')
         self.models = [Net().to(self.device) for i in range(self.N_models)]
         self.model_names = ['' for i in range(self.N_models)]
         # self.classes = ('0', '1')
@@ -818,14 +818,19 @@ class MultiModelTester():
                 scores_list = []
                 for model in self.models:
                     preds = model(images)
+                    print(f'preds: {preds}')
                     preds_for_1 = F.softmax(preds, dim=1)[:, 1]#.tolist()
                     scores_list.append(preds_for_1)
+                    print(f'scores_list: {scores_list}')
 
                 scores = torch.cat([x.unsqueeze(-1) for x in scores_list], -1)
+                print(f'scores1: {scores}')
                 scores = scores.detach().cpu().squeeze().numpy()
+                print(f'scores2: {scores}')
 
                 for i, path in enumerate(paths):
                     score_data[path] = scores[i, :]
+                print(f'score_data: {score_data}')
 
         scores_pkl = os.path.join(output_dir, 'classifier_scores.pkl')
         print('Saving multi model classifier scores to {}'.format(scores_pkl))
