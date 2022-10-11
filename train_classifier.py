@@ -707,8 +707,8 @@ def main(redirect_stdout=False):
     return
 
 
-if __name__ == "__main__":
-    main(redirect_stdout=True)
+# if __name__ == "__main__":
+#     main(redirect_stdout=True)
 
 
 def main_inference(args, redirect_stdout=False):
@@ -831,3 +831,7 @@ class MultiModelTester():
         import pickle
         with open(scores_pkl, 'wb') as f:
             pickle.dump(score_data, f)
+
+
+if __name__ == "__main__":
+    main(redirect_stdout=True)
