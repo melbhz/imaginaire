@@ -816,9 +816,8 @@ class MultiModelTester():
 
         with torch.no_grad():
             for images, paths in self.test_loader:
-                print(f'images1: {images}')
+                print(f'paths: {paths}')
                 images = images.to(self.device)
-                print(f'images2: {images}')
 
                 scores_modeli = []
                 for model in self.models:
