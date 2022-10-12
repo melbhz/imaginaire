@@ -832,6 +832,7 @@ class MultiModelTester():
                 paths_list.append(paths)
                 scores_list.append(scores)
 
+        print(f'paths_list: {paths_list}')
         data_paths = torch.cat([x for x in paths_list], 0)
         data_scores = torch.cat([x for x in scores_list], 0)
         data_save = {'paths': data_paths, 'scores': data_scores, 'models': self.model_names}
