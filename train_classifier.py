@@ -652,9 +652,12 @@ def parse_args():
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--resume', type=int)
 
+    ##--The following 4 hp are only used for multi mode inference--##
     parser.add_argument('--multi_model_inference', action='store_true')
     parser.add_argument('--output_dir_inference', help='Dir for saving inference results.')
     parser.add_argument('--config_inference', help='Path to the inference config file.')
+    parser.add_argument('--redirect_stdout', action='store_true')
+    ##-------------------------------------------------------------##
 
     args = parser.parse_args()
     return args
@@ -663,7 +666,7 @@ def parse_args():
 def main(redirect_stdout=False):
     args = parse_args()
     if args.multi_model_inference:
-        main_inference(args, redirect_stdout=redirect_stdout)
+        main_inference(args, redirect_stdout=args.redirect_stdout)
         return
 
     set_random_seed(args.seed)
@@ -807,7 +810,7 @@ class MultiModelTester():
             else:
                 print(f'Nooooooooo! No checkpoint found for {k}: {v}')
 
-    def multi_model_inference(self, output_dir):
+    def multi_model_inference(self, output_dir, output_fn='classifier_scores.pkl'):
         score_dict = {}
         paths_list = []
         scores_list =[]
@@ -816,7 +819,7 @@ class MultiModelTester():
 
         with torch.no_grad():
             for images, paths in self.test_loader:
-                print(f'paths: {paths}')
+                # print(f'paths: {paths}') # paths is a tuple of path
                 images = images.to(self.device)
 
                 scores_modeli = []
@@ -834,11 +837,11 @@ class MultiModelTester():
                 scores_list.append(scores)
 
         print(f'paths_list: {paths_list}')
-        data_paths = torch.cat([x for x in paths_list], 0)
-        data_scores = torch.cat([x for x in scores_list], 0)
+        data_paths = np.concatenate(tuple(np.asarray(x) for x in paths_list), axis=0)
+        data_scores = torch.cat(scores_list, 0)
         data_save = {'paths': data_paths, 'scores': data_scores, 'models': self.model_names}
 
-        scores_pkl = os.path.join(output_dir, 'classifier_scores.pkl')
+        scores_pkl = os.path.join(output_dir, output_fn)
         print('Saving multi model classifier scores to {}'.format(scores_pkl))
         import pickle
         with open(scores_pkl, 'wb') as f:
