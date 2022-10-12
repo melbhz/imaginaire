@@ -808,7 +808,9 @@ class MultiModelTester():
                 print(f'Nooooooooo! No checkpoint found for {k}: {v}')
 
     def multi_model_inference(self, output_dir):
-        score_data = {}
+        score_dict = {}
+        paths_list = []
+        scores_list =[]
         for model in self.models:
             model.eval()
 
@@ -816,28 +818,30 @@ class MultiModelTester():
             for images, paths in self.test_loader:
                 images = images.to(self.device)
 
-                scores_list = []
+                scores_modeli = []
                 for model in self.models:
                     preds = model(images)
-                    # print(f'preds: {preds}')
                     preds_for_1 = F.softmax(preds, dim=1)[:, 1]#.tolist()
-                    scores_list.append(preds_for_1)
-                    # print(f'scores_list: {scores_list}')
+                    scores_modeli.append(preds_for_1)
 
-                scores = torch.cat([x.unsqueeze(-1) for x in scores_list], -1)
-                # print(f'scores1: {scores}')
+                scores = torch.cat([x.unsqueeze(-1) for x in scores_modeli], -1)
                 scores = scores.detach().cpu().squeeze().numpy()
-                # print(f'scores2: {scores}')
 
                 for i, path in enumerate(paths):
-                    score_data[path] = scores[i, :]
-                # print(f'score_data: {score_data}')
+                    score_dict[path] = scores[i, :]
+                paths_list.append(paths)
+                scores_list.append(scores)
+
+        data_paths = torch.cat([x for x in paths_list], 0)
+        data_scores = torch.cat([x for x in scores_list], 0)
+        data_save = {'paths': data_paths, 'scores': data_scores, 'models': self.model_names}
 
         scores_pkl = os.path.join(output_dir, 'classifier_scores.pkl')
         print('Saving multi model classifier scores to {}'.format(scores_pkl))
         import pickle
         with open(scores_pkl, 'wb') as f:
-            pickle.dump(score_data, f)
+            # pickle.dump(score_dict, f)
+            pickle.dump(data_save, f)
 
 
 if __name__ == "__main__":
