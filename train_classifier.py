@@ -836,9 +836,8 @@ class MultiModelTester():
                 paths_list.append(paths)
                 scores_list.append(scores)
 
-        print(f'paths_list: {paths_list}')
         data_paths = np.concatenate(tuple(np.asarray(x) for x in paths_list), axis=0)
-        data_scores = torch.cat(scores_list, 0)
+        data_scores = np.concatenate(scores_list, axis=0)
         data_save = {'paths': data_paths, 'scores': data_scores, 'models': self.model_names}
 
         scores_pkl = os.path.join(output_dir, output_fn)
