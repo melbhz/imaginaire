@@ -831,6 +831,8 @@ class MultiModelTester():
                 scores = torch.cat([x.unsqueeze(-1) for x in scores_modeli], -1)
                 scores = scores.detach().cpu().squeeze().numpy()
 
+                print(f'scores: {scores}')
+
                 for i, path in enumerate(paths):
                     score_dict[path] = scores[i, :]
                 paths_list.append(paths)
