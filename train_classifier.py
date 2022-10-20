@@ -828,6 +828,8 @@ class MultiModelTester():
                     preds_for_1 = F.softmax(preds, dim=1)[:, 1]#.tolist()
                     scores_modeli.append(preds_for_1)
 
+                print(f'scores_modeli: {scores_modeli}')
+
                 scores = torch.cat([x.unsqueeze(-1) for x in scores_modeli], -1)
                 scores = scores.detach().cpu().squeeze().numpy()
 
