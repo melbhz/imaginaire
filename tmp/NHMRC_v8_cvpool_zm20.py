@@ -468,7 +468,7 @@ def run_all_five_image_tiles_combination():
     print('run_all_five_image_tiles_combination() Run Finished!')
 
 
-def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM_CPUS = 24):
+def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM_CPUS = 24, TO_DIR=None):
     '''
     Args:
         FROM_DIR:
@@ -491,7 +491,10 @@ def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP
             return
 
         new_folder = f'{FROM_FOLDER}_k{N_XY}_s{N_STEP}_p{IMGSIZE}'
-        to_dir = os.path.join(BASE_DIR, new_folder)
+        if TO_DIR is None:
+            to_dir = os.path.join(BASE_DIR, new_folder)
+        else:
+            to_dir = os.path.join(TO_DIR, new_folder)
         if not os.path.exists(to_dir):
             print("{} not exist, creating it...".format(to_dir))
             os.makedirs(to_dir)
@@ -578,6 +581,16 @@ def save_tile5_burwood_chatswood():
     print('save_tile5_burwood_chatswood() Run Finished!')
 
 
+
+def save_zoom20_SA2_GSyd100():
+    BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSyd100/Unzip'
+    TO_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSyd100/Unzip_Zoom20'
+    SA2s = [str(f) for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
+    for sa2 in SA2s:
+        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=2, N_STEP=2, IMGSIZE=256*1, NUM_CPUS=24, TO_DIR=TO_DIR)
+    print('save_zoom20_SA2_GSyd100() Run Finished!')
+
+
 if __name__ == "__main__":
     # save_zoom_up_images()
     # save_zoom_up_large_images()
@@ -586,7 +599,9 @@ if __name__ == "__main__":
     # run_all_zoom20_combination()
     # run_all_five_image_tiles_combination()
 
-    save_zoom20_burwood_chatswood()
-    save_tile5_burwood_chatswood()
+    # save_zoom20_burwood_chatswood()
+    # save_tile5_burwood_chatswood()
+
+    save_zoom20_SA2_GSyd100()
 
 
