@@ -511,6 +511,10 @@ def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP
         onlyfiles = os.listdir(from_dir)
         # os.listdir(FROM_DIR) is fast but not as safe as using [f for f in os.listdir(FROM_DIR) if os.path.isfile(os.path.join(FROM_DIR, f))]
         print(f'from dir images: {len(onlyfiles)}')
+        if len(onlyfiles) == 0:
+            print('No images found! Exiting.')
+            return
+
         print(f'time last: {time.time() - start}')
 
         fn_dict = {filename.strip().split('~')[1]: filename for filename in onlyfiles}
