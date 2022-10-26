@@ -10,7 +10,7 @@ import random
 from shutil import move
 
 
-def save_zoom_up_images(FROM_DIR, TO_DIR, IMGSIZE = 256 * 2, NUM_CPUS = 24):
+def save_zoom_up_images(FROM_DIR, TO_DIR, IMGSIZE=256 * 2, NUM_CPUS=24):
     # FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AnxietyDiag/train/images_a'
     # TO_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AnxietyDiag/train_imagesa_zoom20'
     # IMGSIZE = 256 * 2
@@ -159,7 +159,7 @@ def merge_image_list(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGSIZE, T
     print(f'cpu {cpuid} - done.')
 
 
-def save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY = 5, IMGSIZE = 256, NUM_CPUS = 24):
+def save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY=5, IMGSIZE=256, NUM_CPUS=24):
     # FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AnxietyDiag/train/images_b'
     # TO_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AnxietyDiag/train_imagesb_n10'
     # N_XY = 10
@@ -193,7 +193,7 @@ def save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY = 5, IMGSIZE = 256, NUM_CPU
     print(f'fn_array.shape: {fn_array.shape}')
 
     coords = [[int(x) for x in coord.split(',')] for coord in fn_dict.keys()]
-    coord_array = np.array(coords) #, dtype=np.uint32)
+    coord_array = np.array(coords)  # , dtype=np.uint32)
     print(f'coord_array.shape: {coord_array.shape}')
     print(f'coord_array.dtype: {coord_array.dtype}')
     print(f'coord_array[:5] {coord_array[:5]}')
@@ -204,7 +204,6 @@ def save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY = 5, IMGSIZE = 256, NUM_CPU
     # maxXY = np.amax(data[:, :2].astype(np.int), axis=0)
     print('minXY, maxXY = {}, {}'.format(minXY, maxXY))
     # return
-
 
     start = time.time()
     filename_list = []
@@ -231,7 +230,8 @@ def save_zoom_up_large_images(FROM_DIR, TO_DIR, N_XY = 5, IMGSIZE = 256, NUM_CPU
 
     pool = mp.Pool()
     for i in range(NUM_CPUS):
-        pool.apply_async(merge_image_list_large, args=(i, filename_list_nested[i], fn_dict, FROM_DIR, TO_DIR, IMGSIZE, N_XY))
+        pool.apply_async(merge_image_list_large,
+                         args=(i, filename_list_nested[i], fn_dict, FROM_DIR, TO_DIR, IMGSIZE, N_XY))
 
     '''    
     results = []
@@ -278,8 +278,8 @@ def merge_image_list_large(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGS
     print(f'cpu {cpuid} - done.')
 
 
-
-def save_combined_tile_images(FROM_DIR, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM_CPUS = 24, images_a = 'images_a', images_b = 'images_b', split_percentage=10):
+def save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=5, IMGSIZE=256, NUM_CPUS=24, images_a='images_a',
+                              images_b='images_b', split_percentage=10):
     '''
     Args:
         FROM_DIR:
@@ -343,7 +343,7 @@ def save_combined_tile_images(FROM_DIR, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM
         print(f'fn_array.shape: {fn_array.shape}')
 
         coords = [[int(x) for x in coord.split(',')] for coord in fn_dict.keys()]
-        coord_array = np.array(coords) #, dtype=np.uint32)
+        coord_array = np.array(coords)  # , dtype=np.uint32)
         print(f'coord_array.shape: {coord_array.shape}')
         print(f'coord_array.dtype: {coord_array.dtype}')
         print(f'coord_array[:5] {coord_array[:5]}')
@@ -379,7 +379,8 @@ def save_combined_tile_images(FROM_DIR, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM
 
         pool = mp.Pool()
         for i in range(NUM_CPUS):
-            pool.apply_async(merge_image_list_tile, args=(i, filename_list_nested[i], fn_dict, FROM_DIR, result_train_aORb, IMGSIZE, N_XY))
+            pool.apply_async(merge_image_list_tile,
+                             args=(i, filename_list_nested[i], fn_dict, FROM_DIR, result_train_aORb, IMGSIZE, N_XY))
 
         '''    
         results = []
@@ -393,7 +394,8 @@ def save_combined_tile_images(FROM_DIR, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM
 
         # above have put all images in train folder, next will move a certain percentage to val folder
         split_train_val(result_train_aORb, result_val_aORb, split_percentage)
-        print(f"moving {split_percentage}% images from {result_train_aORb} to {result_val_aORb} finished! - time last: {time.time() - start}")
+        print(
+            f"moving {split_percentage}% images from {result_train_aORb} to {result_val_aORb} finished! - time last: {time.time() - start}")
 
 
 def split_train_val(DIR, TARGET, percentage=10):
@@ -441,34 +443,39 @@ def merge_image_list_tile(cpuid, filename_list, fn_dict, FROM_DIR, TO_DIR, IMGSI
 
 def test():
     FROM_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/AlcoholDrinksPerWeek'
-    save_combined_tile_images(FROM_DIR, N_XY=2, N_STEP=2, IMGSIZE=256*2, NUM_CPUS=8, images_a='images_a',
+    save_combined_tile_images(FROM_DIR, N_XY=2, N_STEP=2, IMGSIZE=256 * 2, NUM_CPUS=8, images_a='images_a',
                               images_b='images_b', split_percentage=10)
     print('test() Run Finished!')
 
+
 def run_all_zoom20_combination():
     factors = [
-        "age", "AnxietyDiag", "FeelDepressed", "HoursSittingPerDay", "BMI", "GeneralHealthRating", "SmokeCigsDay", "AlcoholDrinksPerWeek", "DepressionDiag"
+        "age", "AnxietyDiag", "FeelDepressed", "HoursSittingPerDay", "BMI", "GeneralHealthRating", "SmokeCigsDay",
+        "AlcoholDrinksPerWeek", "DepressionDiag"
         # , "AlcoholDaysPerWeek", "HighBloodPresDiag"
-        ]
+    ]
     for factor in factors:
         FROM_DIR = f'/data/scratch/projects/punim1358/Datasets/NSW_SA2/{factor}'
-        save_combined_tile_images(FROM_DIR, N_XY=2, N_STEP=2, IMGSIZE=256*2, NUM_CPUS=24, images_a='images_a',
-                              images_b='images_b', split_percentage=10)
+        save_combined_tile_images(FROM_DIR, N_XY=2, N_STEP=2, IMGSIZE=256 * 2, NUM_CPUS=24, images_a='images_a',
+                                  images_b='images_b', split_percentage=10)
     print('run_all_zoom20_combination() Run Finished!')
+
 
 def run_all_five_image_tiles_combination():
     factors = [
-        "age", "AnxietyDiag", "FeelDepressed", "HoursSittingPerDay", "BMI", "GeneralHealthRating", "SmokeCigsDay", "AlcoholDrinksPerWeek", "DepressionDiag"
+        "age", "AnxietyDiag", "FeelDepressed", "HoursSittingPerDay", "BMI", "GeneralHealthRating", "SmokeCigsDay",
+        "AlcoholDrinksPerWeek", "DepressionDiag"
         # , "AlcoholDaysPerWeek", "HighBloodPresDiag"
-        ]
+    ]
     for factor in factors:
         FROM_DIR = f'/data/scratch/projects/punim1358/Datasets/NSW_SA2/{factor}'
-        save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=3, IMGSIZE=256*5, NUM_CPUS=24, images_a='images_a',
-                              images_b='images_b', split_percentage=10)
+        save_combined_tile_images(FROM_DIR, N_XY=5, N_STEP=3, IMGSIZE=256 * 5, NUM_CPUS=24, images_a='images_a',
+                                  images_b='images_b', split_percentage=10)
     print('run_all_five_image_tiles_combination() Run Finished!')
 
 
-def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP = 5, IMGSIZE = 256, NUM_CPUS = 24, TO_DIR=None):
+def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY=5, N_STEP=5, IMGSIZE=256, NUM_CPUS=24,
+                                         TO_DIR=None):
     '''
     Args:
         FROM_DIR:
@@ -522,7 +529,7 @@ def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP
         print(f'fn_array.shape: {fn_array.shape}')
 
         coords = [[int(x) for x in coord.split(',')] for coord in fn_dict.keys()]
-        coord_array = np.array(coords) #, dtype=np.uint32)
+        coord_array = np.array(coords)  # , dtype=np.uint32)
         print(f'coord_array.shape: {coord_array.shape}')
         print(f'coord_array.dtype: {coord_array.dtype}')
         print(f'coord_array[:5] {coord_array[:5]}')
@@ -558,7 +565,8 @@ def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP
 
         pool = mp.Pool()
         for i in range(NUM_CPUS):
-            pool.apply_async(merge_image_list_tile, args=(i, filename_list_nested[i], fn_dict, from_dir, to_dir, IMGSIZE, N_XY))
+            pool.apply_async(merge_image_list_tile,
+                             args=(i, filename_list_nested[i], fn_dict, from_dir, to_dir, IMGSIZE, N_XY))
 
         '''    
         results = []
@@ -570,20 +578,21 @@ def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP
         pool.join()
         print(f"zoom up conversion finished! - time last: {time.time() - start}")
 
+
 def save_zoom20_burwood_chatswood():
-    SA2s = ['11034', '11113']#'11390', '11398', '11470']
+    SA2s = ['11034', '11113']  # '11390', '11398', '11470']
     BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/age/For_tSNE_Classifier'
     for sa2 in SA2s:
-        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=2, N_STEP=2, IMGSIZE=256*1, NUM_CPUS=24)
+        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=2, N_STEP=2, IMGSIZE=256 * 1, NUM_CPUS=24)
     print('save_zoom20_burwood_chatswood() Run Finished!')
 
+
 def save_tile5_burwood_chatswood():
-    SA2s = ['11034', '11113']#['11390', '11398', '11470']
+    SA2s = ['11034', '11113']  # ['11390', '11398', '11470']
     BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/age/For_tSNE_Classifier'
     for sa2 in SA2s:
-        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=5, N_STEP=5, IMGSIZE=256*1, NUM_CPUS=24)
+        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=5, N_STEP=5, IMGSIZE=256 * 1, NUM_CPUS=24)
     print('save_tile5_burwood_chatswood() Run Finished!')
-
 
 
 def save_zoom20_SA2_GSyd100():
@@ -592,8 +601,20 @@ def save_zoom20_SA2_GSyd100():
     SA2s = [str(f) for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
     for sa2 in SA2s:
         print(f'combining {sa2}')
-        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=2, N_STEP=2, IMGSIZE=256*1, NUM_CPUS=24, TO_DIR=TO_DIR)
+        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=2, N_STEP=2, IMGSIZE=256 * 1, NUM_CPUS=24,
+                                             TO_DIR=TO_DIR)
     print('save_zoom20_SA2_GSyd100() Run Finished!')
+
+
+def save_tile5_SA2_GSyd100():
+    BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSyd100/Unzip'
+    TO_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSyd100/Unzip_Tile5'
+    SA2s = [str(f) for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
+    for sa2 in SA2s:
+        print(f'combining {sa2}')
+        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=5, N_STEP=5, IMGSIZE=256 * 1, NUM_CPUS=24,
+                                             TO_DIR=TO_DIR)
+    print('save_tile5_SA2_GSyd100() Run Finished!')
 
 
 if __name__ == "__main__":
@@ -607,6 +628,5 @@ if __name__ == "__main__":
     # save_zoom20_burwood_chatswood()
     # save_tile5_burwood_chatswood()
 
-    save_zoom20_SA2_GSyd100()
-
-
+    # save_zoom20_SA2_GSyd100()
+    save_tile5_SA2_GSyd100()
