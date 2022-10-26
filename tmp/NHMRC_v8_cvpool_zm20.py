@@ -568,7 +568,7 @@ def save_combined_tile_burwood_chatswood(BASE_DIR, FROM_FOLDER, N_XY = 5, N_STEP
 
         pool.close()
         pool.join()
-        print("zoom up conversion finished! - time last: {time.time() - start}")
+        print(f"zoom up conversion finished! - time last: {time.time() - start}")
 
 def save_zoom20_burwood_chatswood():
     SA2s = ['11034', '11113']#'11390', '11398', '11470']
