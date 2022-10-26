@@ -587,6 +587,7 @@ def save_zoom20_SA2_GSyd100():
     TO_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSyd100/Unzip_Zoom20'
     SA2s = [str(f) for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
     for sa2 in SA2s:
+        print(f'combining {sa2}')
         save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=2, N_STEP=2, IMGSIZE=256*1, NUM_CPUS=24, TO_DIR=TO_DIR)
     print('save_zoom20_SA2_GSyd100() Run Finished!')
 
