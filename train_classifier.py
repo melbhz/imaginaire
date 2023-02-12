@@ -757,10 +757,16 @@ def get_test_dataloader(cfg):
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
-    test_dir = cfg['test_data']['roots'][0]
+    # test_dir = cfg['test_data']['roots'][0]
     batch_size = cfg['batch_size']
-    print(f'test_dir: {test_dir}')
-    test_list = glob.glob(os.path.join(test_dir, '*.jpg')) #f'*.{cfg.ext}'
+    # print(f'test_dir: {test_dir}')
+    # test_list = glob.glob(os.path.join(test_dir, '*.jpg')) #f'*.{cfg.ext}'
+
+    test_list = []
+    for test_dir in cfg['test_data']['roots']:
+        print(f'test_dir: {test_dir}')
+        test_list += glob.glob(os.path.join(test_dir, '*.jpg'))  # f'*.{cfg.ext}'
+
     print(f'len(test_list): {len(test_list)}')
     test_data = test_dataset(test_list, transform=transform)
     test_loader = torch.utils.data.DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False)
