@@ -67,6 +67,35 @@ class Generator(nn.Module):
         file_names = data['key']['images_content'][0]
         return output_images, file_names
 
+    def inference_test(self, data, keep_original_size=True):
+        r"""COCO-FUNIT inference.
+
+        Args:
+            data (dict): Training data at the current iteration.
+              - images_content (tensor): Content images.
+              - images_style (tensor): Style images.
+            a2b (bool): If ``True``, translates images from domain A to B,
+                otherwise from B to A.
+            keep_original_size (bool): If ``True``, output image is resized
+            to the input content image size.
+        """
+        content_a = self.generator.content_encoder(data['images_content'])
+        style_b = self.generator.style_encoder(data['images_style'])
+
+        print(f'data:= {data}')
+        print(f'content_a:= {content_a}')
+        print(f'style_b:= {style_b}')
+        print(f'keep_original_size:= {keep_original_size}')
+
+        output_images = self.generator.decode(content_a, style_b)
+        if keep_original_size:
+            height = data['original_h_w'][0][0]
+            width = data['original_h_w'][0][1]
+            # print('( H, W) = ( %d, %d)' % (height, width))
+            output_images = torch.nn.functional.interpolate(
+                output_images, size=[height, width])
+        file_names = data['key']['images_content'][0]
+        return output_images, file_names
 
 class COCOFUNITTranslator(nn.Module):
     r"""COCO-FUNIT Generator architecture.

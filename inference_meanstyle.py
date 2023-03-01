@@ -57,6 +57,8 @@ def parse_args():
 
     parser.add_argument('--save_classifier_score', action='store_true')
 
+    parser.add_argument('--cocofunit', action='store_true')
+
     args = parser.parse_args()
     return args
 
@@ -137,6 +139,11 @@ def main():
         classifier = train_classifier.ClassifierTrainer(cfg=cfg, model=train_classifier.Net())
         classifier.load_checkpoint(checkpoint_path=args.checkpoint_classifier)
         trainer.test_classifier_score_map(test_data_loader, args.output_dir, classifier, cfg.inference_args)
+
+    elif args.cocofunit:
+        trainer.test_cocofunit(test_data_loader, args.output_dir, cfg.inference_args)
+
+
     else:
         trainer.test_style(test_data_loader, args.output_dir, args.munit_style, args.save_style_codes_only,
                            args.all_styles, args.simple_grid, args.grid_styles, cfg.inference_args)

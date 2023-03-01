@@ -852,6 +852,33 @@ class BaseTrainer(object):
                                                minus1to1_normalized=True)
                 save_pilimage_in_jpeg(fullname, output_image)
 
+
+    def test_cocofunit(self, data_loader, output_dir, inference_args):
+        r"""Compute results images for a batch of input data and save the
+        results in the specified folder.
+
+        Args:
+            data_loader (torch.utils.data.DataLoader): PyTorch dataloader.
+            output_dir (str): Target location for saving the output image.
+        """
+        if self.cfg.trainer.model_average_config.enabled:
+            net_G = self.net_G.module.averaged_model
+        else:
+            net_G = self.net_G.module
+        net_G.eval()
+
+        print('# of samples %d' % len(data_loader))
+        for it, data in enumerate(tqdm(data_loader)):
+            data = self.start_of_iteration(data, current_iteration=-1)
+            with torch.no_grad():
+                output_images, file_names = \
+                    net_G.inference_test(data, **vars(inference_args))
+            for output_image, file_name in zip(output_images, file_names):
+                fullname = os.path.join(output_dir, file_name + '.jpg')
+                output_image = tensor2pilimage(output_image.clamp_(-1, 1),
+                                               minus1to1_normalized=True)
+                save_pilimage_in_jpeg(fullname, output_image)
+
     def test_style(self, data_loader, output_dir, munit_style, save_style_codes_only, all_styles, simple_grid, grid_styles, inference_args):
         r"""Compute results images for a batch of input data and save the
         results in the specified folder.
