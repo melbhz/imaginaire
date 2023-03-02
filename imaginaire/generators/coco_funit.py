@@ -82,7 +82,7 @@ class Generator(nn.Module):
         content_a = self.generator.content_encoder(data['images_content'])
         style_b = self.generator.style_encoder(data['images_style'])
 
-        print(f'data:= {data}')
+        print(f'data:= {data}\n data.size():= {data.size()}')
         print(f'content_a.size():= {content_a.size()}; content_a:= {content_a}')
         print(f'style_b.size():= {style_b.size()}; style_b:= {style_b}')
         print(f'keep_original_size:= {keep_original_size}')
