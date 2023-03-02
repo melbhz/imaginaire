@@ -231,18 +231,18 @@ class COCOFUNITTranslator(nn.Module):
             style (tensor): Style code tensor.
         """
         content_style_code = content.mean(3).mean(2)
-        print(f'content.mean(3):= {content.mean(3)}')
-        print(f'content.mean(3).mean(2):= {content.mean(3).mean(2)}')
-        print(f'content:= {content}')
+        print(f'content.mean(3):= {content.mean(3)}\n content.mean(3).size():= {content.mean(3).size()}')
+        print(f'content.mean(3).mean(2):= {content.mean(3).mean(2)}\n content.mean(3).mean(2).size():= {content.mean(3).mean(2).size()}')
+        print(f'content:= {content}\n content.size():= {content.size()}')
 
         content_style_code = self.mlp_content(content_style_code)
         batch_size = style.size(0)
         usb = self.usb.repeat(batch_size, 1)
         style = style.view(batch_size, -1)
-        print(f'style:= {style}')
+        print(f'style:= {style}\n style.size():= {style.size()}')
         style_in = self.mlp_style(torch.cat([style, usb], 1))
         coco_style = style_in * content_style_code
-        print(f'coco_style:= {coco_style}')
+        print(f'coco_style:= {coco_style}\n coco_style.size():= {coco_style.size()}')
         coco_style = self.mlp(coco_style)
         images = self.decoder(content, coco_style)
         return images
