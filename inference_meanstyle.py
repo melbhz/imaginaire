@@ -141,6 +141,7 @@ def main():
         trainer.test_classifier_score_map(test_data_loader, args.output_dir, classifier, cfg.inference_args)
 
     elif args.cocofunit:
+        print('test_cocofunit ...... ......')
         trainer.test_cocofunit(test_data_loader, args.output_dir, cfg.inference_args)
 
 

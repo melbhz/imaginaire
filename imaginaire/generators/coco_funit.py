@@ -83,11 +83,11 @@ class Generator(nn.Module):
         style_b = self.generator.style_encoder(data['images_style'])
 
         print(f'data:= {data}')
-        print(f'content_a:= {content_a}')
-        print(f'style_b:= {style_b}')
+        print(f'content_a.size():= {content_a.size()}; content_a:= {content_a}')
+        print(f'style_b.size():= {style_b.size()}; style_b:= {style_b}')
         print(f'keep_original_size:= {keep_original_size}')
 
-        output_images = self.generator.decode(content_a, style_b)
+        output_images = self.generator.decode_test(content_a, style_b)
         if keep_original_size:
             height = data['original_h_w'][0][0]
             width = data['original_h_w'][0][1]
@@ -218,6 +218,31 @@ class COCOFUNITTranslator(nn.Module):
         style = style.view(batch_size, -1)
         style_in = self.mlp_style(torch.cat([style, usb], 1))
         coco_style = style_in * content_style_code
+        coco_style = self.mlp(coco_style)
+        images = self.decoder(content, coco_style)
+        return images
+
+
+    def decode_test(self, content, style):
+        r"""Generate images by combining their content and style codes.
+
+        Args:
+            content (tensor): Content code tensor.
+            style (tensor): Style code tensor.
+        """
+        content_style_code = content.mean(3).mean(2)
+        print(f'content.mean(3):= {content.mean(3)}')
+        print(f'content.mean(3).mean(2):= {content.mean(3).mean(2)}')
+        print(f'content:= {content}')
+
+        content_style_code = self.mlp_content(content_style_code)
+        batch_size = style.size(0)
+        usb = self.usb.repeat(batch_size, 1)
+        style = style.view(batch_size, -1)
+        print(f'style:= {style}')
+        style_in = self.mlp_style(torch.cat([style, usb], 1))
+        coco_style = style_in * content_style_code
+        print(f'coco_style:= {coco_style}')
         coco_style = self.mlp(coco_style)
         images = self.decoder(content, coco_style)
         return images
