@@ -82,11 +82,13 @@ class Generator(nn.Module):
         content_a = self.generator.content_encoder(data['images_content'])
         style_b = self.generator.style_encoder(data['images_style'])
 
-        print(f'data:= {data}')
+        print(f'data["key"]:= {data["key"]}')
         print(f"data['images_content']:= {data['images_content']}\n data['images_content'].size():= {data['images_content'].size()}")
         print(f"data['images_style']:= {data['images_style']}\n data['images_style'].size():= {data['images_style'].size()}")
-        print(f'content_a.size():= {content_a.size()}; content_a:= {content_a}')
-        print(f'style_b.size():= {style_b.size()}; style_b:= {style_b}')
+        # print(f'content_a:= {content_a}\n content_a.size():= {content_a.size()}')
+        print(f'content_a.size():= {content_a.size()}')
+        # print(f'style_b:= {style_b}\n style_b.size():= {style_b.size()}')
+        print(f'style_b.size():= {style_b.size()}')
         print(f'keep_original_size:= {keep_original_size}')
 
         output_images = self.generator.decode_test(content_a, style_b)
@@ -97,6 +99,7 @@ class Generator(nn.Module):
             output_images = torch.nn.functional.interpolate(
                 output_images, size=[height, width])
         file_names = data['key']['images_content'][0]
+        print(f"file_names:= {file_names}")
         return output_images, file_names
 
 class COCOFUNITTranslator(nn.Module):
