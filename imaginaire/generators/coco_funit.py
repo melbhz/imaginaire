@@ -83,8 +83,10 @@ class Generator(nn.Module):
         style_b = self.generator.style_encoder(data['images_style'])
 
         print(f'data["key"]:= {data["key"]}')
-        print(f"data['images_content']:= {data['images_content']}\n data['images_content'].size():= {data['images_content'].size()}")
-        print(f"data['images_style']:= {data['images_style']}\n data['images_style'].size():= {data['images_style'].size()}")
+        # print(f"data['images_content']:= {data['images_content']}\n data['images_content'].size():= {data['images_content'].size()}")
+        print(f"data['images_content'].size():= {data['images_content'].size()}")
+        # print(f"data['images_style']:= {data['images_style']}\n data['images_style'].size():= {data['images_style'].size()}")
+        print(f"data['images_style'].size():= {data['images_style'].size()}")
         # print(f'content_a:= {content_a}\n content_a.size():= {content_a.size()}')
         print(f'content_a.size():= {content_a.size()}')
         # print(f'style_b:= {style_b}\n style_b.size():= {style_b.size()}')
@@ -238,7 +240,8 @@ class COCOFUNITTranslator(nn.Module):
         content_style_code = content.mean(3).mean(2)
         print(f'content.mean(3):= {content.mean(3)}\n content.mean(3).size():= {content.mean(3).size()}')
         print(f'content.mean(3).mean(2):= {content.mean(3).mean(2)}\n content.mean(3).mean(2).size():= {content.mean(3).mean(2).size()}')
-        print(f'content:= {content}\n content.size():= {content.size()}')
+        # print(f'content:= {content}\n content.size():= {content.size()}')
+        print(f'content.size():= {content.size()}')
 
         content_style_code = self.mlp_content(content_style_code)
         batch_size = style.size(0)
