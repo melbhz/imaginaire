@@ -59,6 +59,8 @@ def parse_args():
 
     parser.add_argument('--cocofunit', action='store_true')
     parser.add_argument('--cocofunit_option', type=int, default=0)
+    parser.add_argument('--inference_root', help='inference dir', default='')
+    #inference_root
 
     args = parser.parse_args()
     return args
@@ -143,7 +145,7 @@ def main():
 
     elif args.cocofunit:
         print('test_cocofunit ...... ......')
-        trainer.test_cocofunit(test_data_loader, args.output_dir, args.cocofunit_option, args.tsne_one_image_id, cfg.inference_args)
+        trainer.test_cocofunit(test_data_loader, args.output_dir, args.cocofunit_option, args.tsne_one_image_id, args.inference_root, cfg.inference_args)
 
 
     else:

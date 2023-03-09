@@ -877,7 +877,7 @@ class BaseTrainer(object):
         elif cocofunit_option == 2:
             self.test_tsne_cocofunit_squeezed(data_loader, output_dir, inference_args)
         elif cocofunit_option == 3:
-            self.test_tsne_one_image_cocofunit(data_loader, output_dir, tsne_one_image_id, inference_args)
+            self.test_tsne_one_image_cocofunit(data_loader, output_dir, tsne_one_image_id, inference_root, inference_args)
 
     def test_tsne_cocofunit(self, data_loader, output_dir, inference_args):
         if self.cfg.trainer.model_average_config.enabled:
@@ -1081,7 +1081,7 @@ class BaseTrainer(object):
         path = [os.path.join(content_data['dirname'], fn + '.jpg') for fn in content_data['filename']]
         '''
 
-    def test_tsne_one_image_cocofunit(self, data_loader, output_dir, tsne_one_image_id, inference_args):
+    def test_tsne_one_image_cocofunit(self, data_loader, output_dir, tsne_one_image_id, inference_root, inference_args):
         if self.cfg.trainer.model_average_config.enabled:
             net_G = self.net_G.module.averaged_model
         else:
@@ -1133,8 +1133,10 @@ class BaseTrainer(object):
         # content = contents[tsne_one_image_id].unsqueeze(0)
         content = content_list[tsne_one_image_id].unsqueeze(0)
         print(f'The one image to translate is {content_fname_list[tsne_one_image_id]}')
-        frm_root = '/data/scratch/projects/punim1358/HZ_GANs/imaginaire/Experiments/coco_animal/inference/'
-        content_image_src = os.path.join(frm_root, content_dirname, f'{content_fname_list[tsne_one_image_id]}.jpg')
+        # inference_root = '/data/scratch/projects/punim1358/HZ_GANs/imaginaire/Experiments/coco_animal/inference/'
+        if inference_root == '':
+            inference_root = os.path.dirname(output_dir)
+        content_image_src = os.path.join(inference_root, content_dirname, f'{content_fname_list[tsne_one_image_id]}.jpg')
         content_image_copy = os.path.join(output_dir,
                                           f'content_image_{tsne_one_image_id}.jpg')
         print(f'Make a copy of content image from {content_image_src} to \n {content_image_copy}')
