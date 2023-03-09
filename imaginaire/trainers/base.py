@@ -1125,6 +1125,7 @@ class BaseTrainer(object):
         for cls_dir in set(class_list):
             newpath = os.path.join(output_dir, cls_dir)
             if not os.path.exists(newpath):
+                print(f'making {newpath}')
                 os.makedirs(newpath, exist_ok=True)
 
         import numpy as np
