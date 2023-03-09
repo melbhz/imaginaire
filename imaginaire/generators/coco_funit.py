@@ -104,6 +104,156 @@ class Generator(nn.Module):
         print(f"file_names:= {file_names}")
         return output_images, file_names
 
+    def inference_style_placeholder(self, data, style_tensor, a2b=True, random_style=True):
+        r"""MUNIT inference.
+
+        Args:
+            data (dict): Training data at the current iteration.
+              - images_a (tensor): Images from domain A.
+              - images_b (tensor): Images from domain B.
+            a2b (bool): If ``True``, translates images from domain A to B,
+                otherwise from B to A.
+            random_style (bool): If ``True``, samples the style code from the
+                prior distribution, otherwise uses the style code encoded from
+                the input images in the other domain.
+        """
+        if a2b:
+            input_key = 'images_a'
+            content_encode = self.autoencoder_a.content_encoder
+            style_encode = self.autoencoder_b.style_encoder
+            decode = self.autoencoder_b.decode
+        else:
+            input_key = 'images_b'
+            content_encode = self.autoencoder_b.content_encoder
+            style_encode = self.autoencoder_a.style_encoder
+            decode = self.autoencoder_a.decode
+
+        content_images = data[input_key]
+        content = content_encode(content_images)
+        if random_style:
+            if style_tensor == 'random':
+                style_channels = self.autoencoder_a.style_channels
+                style = torch.randn(content.size(0), style_channels, 1, 1,
+                                    device=torch.device('cuda'))
+                file_names = data['key'][input_key]['filename']
+            elif style_tensor == '':
+                print(
+                    "Style tensor required!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!, please check your option for munit style!!")
+            else:
+                style = style_tensor
+                file_names = data['key'][input_key]['filename']
+
+            # print(f'data: {data}')
+            # print(f'style: {style}')
+            # print(f'file_names: {file_names}')
+        else:
+            style_key = 'images_b' if a2b else 'images_a'
+            assert style_key in data.keys(), \
+                "{} must be provided when 'random_style' " \
+                "is set to False".format(style_key)
+            style_images = data[style_key]
+            style = style_encode(style_images)
+            file_names = \
+                [content_name + '_style_' + style_name
+                 for content_name, style_name in
+                 zip(data['key'][input_key]['filename'],
+                     data['key'][style_key]['filename'])]
+
+        output_images = decode(content, style)
+        return output_images, file_names
+
+    def get_style_code_placeholder(self, data, a2b=True, random_style=True):
+        if a2b:
+            input_key = 'images_a'
+            style_encode = self.autoencoder_b.style_encoder
+        else:
+            input_key = 'images_b'
+            style_encode = self.autoencoder_a.style_encoder
+
+        if True:
+            style_key = 'images_b' if a2b else 'images_a'
+            style_images = data[style_key]
+            style = style_encode(style_images)
+            style_filenames = data['key'][style_key]['filename']
+            style_dirnames = data['key'][style_key]['lmdb_root']
+            style_dirname = style_dirnames[0] + '/' + style_key
+
+        return style, style_filenames, style_dirname
+
+    def get_content_and_style_code(self, data, keep_original_size=True):
+        r"""COCO-FUNIT inference.
+
+        Args:
+            data (dict): Training data at the current iteration.
+              - images_content (tensor): Content images.
+              - images_style (tensor): Style images.
+            a2b (bool): If ``True``, translates images from domain A to B,
+                otherwise from B to A.
+            keep_original_size (bool): If ``True``, output image is resized
+            to the input content image size.
+        """
+        content = self.generator.content_encoder(data['images_content'])
+        style = self.generator.style_encoder(data['images_style'])
+
+        content_filenames = data['key']['images_content'][0]
+        style_filenames = data['key']['images_style'][0]
+
+        content_dirname = 'images_content'
+        style_dirname = 'images_style'
+
+        return content, content_filenames, content_dirname, style, style_filenames, style_dirname
+
+    def get_contents_and_styles_placeholder(self, data, a2b=True, random_style=True):
+        if a2b:
+            input_key = 'images_a'
+            content_encode = self.autoencoder_a.content_encoder
+            style_key = 'images_b'
+            style_encode = self.autoencoder_b.style_encoder
+        else:
+            input_key = 'images_b'
+            content_encode = self.autoencoder_b.content_encoder
+            style_key = 'images_a'
+            style_encode = self.autoencoder_a.style_encoder
+
+        if True:
+            content_images = data[input_key]
+            content = content_encode(content_images)
+            content_filenames = data['key'][input_key]['filename']
+            content_dirnames = data['key'][input_key]['lmdb_root']
+            content_dirname = content_dirnames[0] + '/' + input_key
+
+        if True:
+            style_images = data[style_key]
+            style = style_encode(style_images)
+            style_filenames = data['key'][style_key]['filename']
+            style_dirnames = data['key'][style_key]['lmdb_root']
+            style_dirname = style_dirnames[0] + '/' + style_key
+
+        return content_images, content, content_filenames, content_dirname, style_images, style, style_filenames, style_dirname
+
+    def inference_tensor_placeholder(self, content, style, a2b=True, random_style=True):
+        if a2b:
+            decode = self.autoencoder_b.decode
+        else:
+            decode = self.autoencoder_a.decode
+
+        output_images = decode(content, style)
+        return output_images
+
+    def inference_tensor_random_placeholder(self, content, a2b=True, random_style=True):
+        if a2b:
+            decode = self.autoencoder_b.decode
+        else:
+            decode = self.autoencoder_a.decode
+
+        style_channels = self.autoencoder_a.style_channels
+        style = torch.randn(content.size(0), style_channels, 1, 1,
+                            device=torch.device('cuda'))
+
+        output_images = decode(content, style)
+        return output_images
+
+
 class COCOFUNITTranslator(nn.Module):
     r"""COCO-FUNIT Generator architecture.
 
@@ -238,7 +388,8 @@ class COCOFUNITTranslator(nn.Module):
             style (tensor): Style code tensor.
         """
         content_style_code = content.mean(3).mean(2)
-        print(f'content.mean(3):= {content.mean(3)}\n content.mean(3).size():= {content.mean(3).size()}')
+        # print(f'content.mean(3):= {content.mean(3)}\n content.mean(3).size():= {content.mean(3).size()}')
+        print(f'content.mean(3).size():= {content.mean(3).size()}')
         print(f'content.mean(3).mean(2):= {content.mean(3).mean(2)}\n content.mean(3).mean(2).size():= {content.mean(3).mean(2).size()}')
         # print(f'content:= {content}\n content.size():= {content.size()}')
         print(f'content.size():= {content.size()}')

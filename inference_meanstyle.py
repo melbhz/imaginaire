@@ -58,6 +58,7 @@ def parse_args():
     parser.add_argument('--save_classifier_score', action='store_true')
 
     parser.add_argument('--cocofunit', action='store_true')
+    parser.add_argument('--cocofunit_option', type=int, default=0)
 
     args = parser.parse_args()
     return args
@@ -142,7 +143,7 @@ def main():
 
     elif args.cocofunit:
         print('test_cocofunit ...... ......')
-        trainer.test_cocofunit(test_data_loader, args.output_dir, cfg.inference_args)
+        trainer.test_cocofunit(test_data_loader, args.output_dir, args.cocofunit_option, cfg.inference_args)
 
 
     else:
