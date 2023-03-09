@@ -948,11 +948,12 @@ class BaseTrainer(object):
             # print(f'content_data["data"].shape: {content_data["data"].shape}')
             # print(f'content_data["dirname"]: {content_data["dirname"]}')
             # print(f'content_data["filename"].shape: {content_data["filename"].shape}')
+            print(f'style_data: {style_data}')
             print(f'style_data["data"].shape: {style_data["data"].shape}')
             print(f'style_data["dirname"]: {style_data["dirname"]}')
             print(f'style_data["filename"].shape: {style_data["filename"].shape}')
 
-        print('Saving content and style codes to {} and\n {}'.format(contents_pkl, styles_pkl))
+        print('Saving style codes to {}'.format(styles_pkl))
 
         import pickle
         '''
