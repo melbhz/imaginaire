@@ -203,6 +203,11 @@ class Generator(nn.Module):
 
         return content, content_filenames, content_dirname, style, style_filenames, style_dirname
 
+    def get_content_and_style_code_squeezed(self, data, keep_original_size=True):
+        content, content_filenames, content_dirname, style, style_filenames, style_dirname = self.get_content_and_style_code(data, keep_original_size=keep_original_size)
+        content, style = self.generator.squeeze_code(content, style)
+        return content, content_filenames, content_dirname, style, style_filenames, style_dirname
+
     def get_contents_and_styles_placeholder(self, data, a2b=True, random_style=True):
         if a2b:
             input_key = 'images_a'
@@ -378,6 +383,26 @@ class COCOFUNITTranslator(nn.Module):
         coco_style = self.mlp(coco_style)
         images = self.decoder(content, coco_style)
         return images
+
+    def squeeze_code(self, content, style):
+        r"""Generate images by combining their content and style codes.
+
+        Args:
+            content (tensor): Content code tensor.
+            style (tensor): Style code tensor.
+        """
+        content_style_code = content.mean(3).mean(2)
+        content_style_code = self.mlp_content(content_style_code)
+        batch_size = style.size(0)
+        usb = self.usb.repeat(batch_size, 1)
+        style = style.view(batch_size, -1)
+        style_in = self.mlp_style(torch.cat([style, usb], 1))
+        coco_style = style_in * content_style_code
+        coco_style = self.mlp(coco_style)
+        # images = self.decoder(content, coco_style)
+        # return images
+        return content, coco_style
+
 
 
     def decode_test(self, content, style):
