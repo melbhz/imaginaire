@@ -1075,6 +1075,7 @@ class BaseTrainer(object):
         if debugging:
             print(f'content_data["data"].shape: {content_data["data"].shape}')
             print(f'content_data["dirname"]: {content_data["dirname"]}')
+            print(f'content_data["class"]: {content_data["class"]}')
             print(f'content_data["filename"].shape: {content_data["filename"].shape}')
             print(f'style_data["data"].shape: {style_data["data"].shape}')
             print(f'style_data["dirname"]: {style_data["dirname"]}')
