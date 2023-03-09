@@ -894,6 +894,7 @@ class BaseTrainer(object):
             style_dict = {}
             style_list = []
             style_fname_list = []
+            class_list = []
         for it, data in enumerate(tqdm(data_loader)):
             data = self.start_of_iteration(data, current_iteration=-1)
             with torch.no_grad():
@@ -912,6 +913,7 @@ class BaseTrainer(object):
                         style_dict[fn] = st
                         style_list.append(st)
                         style_fname_list.append(fn)
+                        class_list.append(fn.split('/')[0])
 
         contents = torch.cat([x.unsqueeze(0) for x in content_list], 0)
         styles = torch.cat([x.unsqueeze(0) for x in style_list], 0)
@@ -937,6 +939,8 @@ class BaseTrainer(object):
         # content_data['filename'] = np.asarray(content_fname_list)
         style_data['filename'] = np.asarray(style_fname_list)
 
+        style_data['class'] = np.asarray(class_list)
+
         # content_data['dirname'] = content_dirname
         style_data['dirname'] = style_dirname
 
@@ -954,6 +958,7 @@ class BaseTrainer(object):
             print(f'style_data["data"].shape: {style_data["data"].shape}')
             print(f'style_data["dirname"]: {style_data["dirname"]}')
             print(f'style_data["filename"].shape: {style_data["filename"].shape}')
+            print(f'content_data["class"]: {style_data["class"]}')
 
         print('Saving style codes to {}'.format(styles_pkl))
 
@@ -1075,7 +1080,6 @@ class BaseTrainer(object):
         if debugging:
             print(f'content_data["data"].shape: {content_data["data"].shape}')
             print(f'content_data["dirname"]: {content_data["dirname"]}')
-            print(f'content_data["class"]: {content_data["class"]}')
             print(f'content_data["filename"].shape: {content_data["filename"].shape}')
             print(f'style_data["data"].shape: {style_data["data"].shape}')
             print(f'style_data["dirname"]: {style_data["dirname"]}')
