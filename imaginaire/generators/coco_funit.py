@@ -67,6 +67,10 @@ class Generator(nn.Module):
         file_names = data['key']['images_content'][0]
         return output_images, file_names
 
+    def inference_tensor(self, content_a, style_b):
+        output_images = self.generator.decode(content_a, style_b)
+        return output_images
+
     def inference_test(self, data, keep_original_size=True):
         r"""COCO-FUNIT inference.
 
@@ -235,15 +239,6 @@ class Generator(nn.Module):
             style_dirname = style_dirnames[0] + '/' + style_key
 
         return content_images, content, content_filenames, content_dirname, style_images, style, style_filenames, style_dirname
-
-    def inference_tensor_placeholder(self, content, style, a2b=True, random_style=True):
-        if a2b:
-            decode = self.autoencoder_b.decode
-        else:
-            decode = self.autoencoder_a.decode
-
-        output_images = decode(content, style)
-        return output_images
 
     def inference_tensor_random_placeholder(self, content, a2b=True, random_style=True):
         if a2b:

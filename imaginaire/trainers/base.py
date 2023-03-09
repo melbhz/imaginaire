@@ -853,7 +853,7 @@ class BaseTrainer(object):
                 save_pilimage_in_jpeg(fullname, output_image)
 
 
-    def test_cocofunit(self, data_loader, output_dir, cocofunit_option, inference_args):
+    def test_cocofunit(self, data_loader, output_dir, cocofunit_option, tsne_one_image_id, inference_args):
         if self.cfg.trainer.model_average_config.enabled:
             net_G = self.net_G.module.averaged_model
         else:
@@ -876,6 +876,8 @@ class BaseTrainer(object):
             self.test_tsne_cocofunit(data_loader, output_dir, inference_args)
         elif cocofunit_option == 2:
             self.test_tsne_cocofunit_squeezed(data_loader, output_dir, inference_args)
+        elif cocofunit_option == 3:
+            self.test_tsne_one_image_cocofunit(data_loader, output_dir, tsne_one_image_id, inference_args)
 
     def test_tsne_cocofunit(self, data_loader, output_dir, inference_args):
         if self.cfg.trainer.model_average_config.enabled:
@@ -1120,14 +1122,20 @@ class BaseTrainer(object):
         # contents = torch.cat([x.unsqueeze(0) for x in content_list], 0)
         styles = torch.cat([x.unsqueeze(0) for x in style_list], 0)
 
+        for cls_dir in set(class_list):
+            newpath = os.path.join(output_dir, cls_dir)
+            if not os.path.exists(newpath):
+                os.makedirs(newpath, exist_ok=True)
+
         import numpy as np
         import shutil
         # content = contents[tsne_one_image_id].unsqueeze(0)
         content = content_list[tsne_one_image_id].unsqueeze(0)
         print(f'The one image to translate is {content_fname_list[tsne_one_image_id]}')
-        content_image_src = os.path.join(content_dirname, f'{content_fname_list[tsne_one_image_id]}.jpg')
+        frm_root = '/data/scratch/projects/punim1358/HZ_GANs/imaginaire/Experiments/coco_animal/inference/'
+        content_image_src = os.path.join(frm_root, content_dirname, f'{content_fname_list[tsne_one_image_id]}.jpg')
         content_image_copy = os.path.join(output_dir,
-                                          f'../image_{tsne_one_image_id}.jpg')
+                                          f'content_image_{tsne_one_image_id}.jpg')
         print(f'Make a copy of content image from {content_image_src} to \n {content_image_copy}')
         shutil.copyfile(content_image_src, content_image_copy)
 
@@ -1136,7 +1144,7 @@ class BaseTrainer(object):
             style = style.unsqueeze(0)
             # for style, file_names in zip(styles, style_fname_list):
             with torch.no_grad():
-                output_images = net_G.inference_tensor(content, style, **vars(inference_args))
+                output_images = net_G.inference_tensor(content, style)
                 file_names = np.atleast_1d(file_names)
             for output_image, file_name in zip(output_images, file_names):
                 fullname = os.path.join(output_dir, file_name + '.jpg')

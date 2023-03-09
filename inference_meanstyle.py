@@ -143,7 +143,7 @@ def main():
 
     elif args.cocofunit:
         print('test_cocofunit ...... ......')
-        trainer.test_cocofunit(test_data_loader, args.output_dir, args.cocofunit_option, cfg.inference_args)
+        trainer.test_cocofunit(test_data_loader, args.output_dir, args.cocofunit_option, args.tsne_one_image_id, cfg.inference_args)
 
 
     else:
