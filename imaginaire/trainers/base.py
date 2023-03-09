@@ -853,7 +853,7 @@ class BaseTrainer(object):
                 save_pilimage_in_jpeg(fullname, output_image)
 
 
-    def test_cocofunit(self, data_loader, output_dir, cocofunit_option, tsne_one_image_id, inference_args):
+    def test_cocofunit(self, data_loader, output_dir, cocofunit_option, tsne_one_image_id, inference_root, inference_args):
         if self.cfg.trainer.model_average_config.enabled:
             net_G = self.net_G.module.averaged_model
         else:
