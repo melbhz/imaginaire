@@ -3,8 +3,11 @@
 #SBATCH --partition interactive
 #SBATCH --time 1-23:00:00 
 #SBATCH --cpus-per-task=8 
+#SBATCH --job-name="mergeZm20"
+#SBATCH --mail-user=haifeng.zhao@unimelb.edu.au
+#SBATCH --mail-type=END
 
-cd /data/scratch/projects/punim1358/HZ_GANs/imaginaire/Experiments/zoom20_test
+cd /data/scratch/projects/punim1358/HZ_GANs/imaginaire/Experiments_PAPER/create_tile_images
 module load numpy/1.18.0-python-3.7.4
 module load opencv
 python3 NHMRC_v8_cvpool_zm20.py

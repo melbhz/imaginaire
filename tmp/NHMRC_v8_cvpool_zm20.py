@@ -617,6 +617,40 @@ def save_tile5_SA2_GSyd100():
     print('save_tile5_SA2_GSyd100() Run Finished!')
 
 
+def save_zoom20_SA2_GSydney():
+    BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSydney/Unzip'
+    TO_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSydney/Unzip_Zoom20'
+    SA2s = [str(f) for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
+    for sa2 in SA2s:
+        print(f'combining {sa2}')
+        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=2, N_STEP=2, IMGSIZE=256 * 1, NUM_CPUS=24,
+                                             TO_DIR=TO_DIR)
+    print('save_zoom20_SA2_GSydney() Run Finished!')
+
+
+def save_zoomN_SA2_GSydney(zoomN=20):
+    BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSydney/Unzip'
+    TO_DIR = f'/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSydney/Unzip_Zoom{zoomN}'
+    n_xy = 2 ** (21 - zoomN)
+    SA2s = [str(f) for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
+    for sa2 in SA2s:
+        print(f'combining {sa2}')
+        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=n_xy, N_STEP=2, IMGSIZE=256 * 1, NUM_CPUS=24,
+                                             TO_DIR=TO_DIR)
+    print(f'save_zoomN_SA2_GSydney(zoomN = {zoomN}) Run Finished!')
+
+
+def save_tile5_SA2_GSydney():
+    BASE_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSydney/Unzip'
+    TO_DIR = '/data/scratch/projects/punim1358/Datasets/NSW_SA2/SA2_GSydney/Unzip_Tile5'
+    SA2s = [str(f) for f in os.listdir(BASE_DIR) if os.path.isdir(os.path.join(BASE_DIR, f))]
+    for sa2 in SA2s:
+        print(f'combining {sa2}')
+        save_combined_tile_burwood_chatswood(BASE_DIR, sa2, N_XY=5, N_STEP=5, IMGSIZE=256 * 1, NUM_CPUS=24,
+                                             TO_DIR=TO_DIR)
+    print('save_tile5_SA2_GSydney() Run Finished!')
+
+
 if __name__ == "__main__":
     # save_zoom_up_images()
     # save_zoom_up_large_images()
@@ -629,4 +663,9 @@ if __name__ == "__main__":
     # save_tile5_burwood_chatswood()
 
     # save_zoom20_SA2_GSyd100()
-    save_tile5_SA2_GSyd100()
+    # save_tile5_SA2_GSyd100()
+
+    # save_zoom20_SA2_GSydney()
+    save_tile5_SA2_GSydney()
+    for zoomN in [20, 19, 18, 17]:
+        save_zoomN_SA2_GSydney(zoomN)
