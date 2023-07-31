@@ -651,6 +651,49 @@ def save_tile5_SA2_GSydney():
     print('save_tile5_SA2_GSydney() Run Finished!')
 
 
+def run_split_train_val_GSydney(split_percentage=10):
+    factors = [
+        "age", "AnxietyDiag", "FeelDepressed", "HoursSittingPerDay", "BMI", "GeneralHealthRating", "SmokeCigsDay",
+        "AlcoholDrinksPerWeek", "DepressionDiag", "AlcoholDaysPerWeek", "HighBloodPresDiag"
+    ]
+    for factor in factors:
+        FROM_DIR = f'/data/scratch/projects/punim1358/Datasets/NSW_SA2/{factor}'
+
+        if not os.path.exists(FROM_DIR):
+            print("{} not exist!".format(FROM_DIR))
+            return
+
+        for images_aORb in ['images_a', 'images_b']:
+            train, val = ('train', 'val')
+            train_aORb = os.path.join(FROM_DIR, train, images_aORb)
+            val_aORb = os.path.join(FROM_DIR, val, images_aORb)
+            if not os.path.exists(train_aORb):
+                print("{} not exist!".format(train_aORb))
+                return
+            if not os.path.exists(val_aORb):
+                print("{} not exist!".format(val_aORb))
+                return
+            split_train_val(train_aORb, val_aORb, split_percentage)
+            print(f"moving {split_percentage}% images from {result_train_aORb} to {result_val_aORb} finished!")
+
+            for N_XY in [2, 4, 8]:
+                new_folder = f'Combined_k{N_XY}_s2_p256'
+                result_train_aORb = os.path.join(FROM_DIR, new_folder, train, images_aORb)
+                result_val_aORb = os.path.join(FROM_DIR, new_folder, val, images_aORb)
+                if not os.path.exists(result_train_aORb):
+                    print("{} not exist, creating it...".format(result_train_aORb))
+                    os.makedirs(result_train_aORb)
+                if not os.path.exists(result_val_aORb):
+                    print("{} not exist, creating it...".format(result_val_aORb))
+                    os.makedirs(result_val_aORb)
+                split_train_val(result_train_aORb, result_val_aORb, split_percentage)
+                print(f"moving {split_percentage}% images from {result_train_aORb} to {result_val_aORb} finished!")
+
+        print(f'{factor} split train val Finished!')
+
+    print('run_split_train_val_GSydney(split_percentage=10) Run Finished!')
+
+
 if __name__ == "__main__":
     # save_zoom_up_images()
     # save_zoom_up_large_images()
@@ -666,6 +709,8 @@ if __name__ == "__main__":
     # save_tile5_SA2_GSyd100()
 
     # save_zoom20_SA2_GSydney()
-    save_tile5_SA2_GSydney()
-    for zoomN in [20, 19, 18, 17]:
-        save_zoomN_SA2_GSydney(zoomN)
+    # save_tile5_SA2_GSydney()
+    # for zoomN in [20, 19, 18, 17]:
+    #     save_zoomN_SA2_GSydney(zoomN)
+
+    run_split_train_val_GSydney(split_percentage=10)
