@@ -674,7 +674,7 @@ def run_split_train_val_GSydney(split_percentage=10):
                 print("{} not exist!".format(val_aORb))
                 return
             split_train_val(train_aORb, val_aORb, split_percentage)
-            print(f"moving {split_percentage}% images from {result_train_aORb} to {result_val_aORb} finished!")
+            print(f"moving {split_percentage}% images from {train_aORb} to {val_aORb} finished!")
 
             for N_XY in [2, 4, 8]:
                 new_folder = f'Combined_k{N_XY}_s2_p256'
