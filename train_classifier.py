@@ -350,6 +350,7 @@ class ClassifierTrainer():
             print(' '.join(f'{self.classes[labels[j]]:5s}' for j in range(self.cfg.data.train.batch_size)))
 
         def vis2():
+            import matplotlib.pyplot as plt
             # get some random training images
             dataiter = iter(self.train_loader)
             images, labels, _ = dataiter.next()
@@ -472,6 +473,7 @@ class ClassifierTrainer():
                         bbox_inches='tight')
 
         def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=15.8):
+            import matplotlib.pyplot as plt
             n_imgs = nrows * ncols
             df_sort = submission.sort_values(by=['probability'], inplace=False, ascending=False)
             heads = df_sort.head(n_imgs)
