@@ -402,6 +402,8 @@ class ClassifierTrainer():
             import math
             ncols = 8  # math.ceil(batch_size / 4)
             nrows = math.ceil(self.cfg.data.train.batch_size / ncols)
+            if nrows > 50:
+                nrows = 50
             fig, axis = plt.subplots(nrows, ncols, figsize=(ncols * 1.1, nrows * 1.15))
             with torch.no_grad():
                 self.model.eval()
