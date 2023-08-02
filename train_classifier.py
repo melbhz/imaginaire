@@ -377,6 +377,7 @@ class ClassifierTrainer():
             plt.legend(loc='best')
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_loss.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_loss.png'), bbox_inches='tight')
+            plt.close(fig)
 
         def plot_accuracy():
             fig = plt.figure(figsize=(16, 9))
@@ -388,6 +389,7 @@ class ClassifierTrainer():
             plt.legend(loc='best')
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_accuracy.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_accuracy.png'), bbox_inches='tight')
+            plt.close(fig)
 
         def plot_sample():
             def img_display(img):
@@ -423,6 +425,7 @@ class ClassifierTrainer():
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample8.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample8.png'),
                         bbox_inches='tight')
+            plt.close(fig)
 
         plot_loss()
         plot_accuracy()
@@ -473,6 +476,7 @@ class ClassifierTrainer():
             print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample5.png')))
             fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_val_sample5.png'),
                         bbox_inches='tight')
+            plt.close(fig)
 
         def vis_head_mid_tail(submission, ncols=10, nrows=10, width=15, heigt=15.8):
             import matplotlib.pyplot as plt
@@ -499,6 +503,7 @@ class ClassifierTrainer():
                 print('saving {}'.format(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png')))
                 fig.savefig(os.path.join(self.cfg.logdir, f'epoch_{self.current_epoch}_{pos}_images.png'),
                             bbox_inches='tight')
+                plt.close(fig)
 
         submission = save_report(self.val_loader)
         vis_report_sample(submission)
