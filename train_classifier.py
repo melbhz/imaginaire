@@ -836,7 +836,7 @@ class MultiModelTester():
         with torch.no_grad():
             for images, paths in self.test_loader:
                 niter += 1
-                print(niter/len(self.test_loader))
+                print(niter, '/', len(self.test_loader))
                 # print(f'paths: {paths}') # paths is a tuple of path
                 images = images.to(self.device)
 
