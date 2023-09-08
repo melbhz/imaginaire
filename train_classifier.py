@@ -545,7 +545,7 @@ class ClassifierTrainer():
                                      (0.5,) * num_channels, inplace=True))
         return transforms.Compose(transform_list)
 
-    def tranform_image(self, image):
+    def transform_image(self, image):
         transform_norm = self.get_transform(normalize=True, num_channels=3)
         img_normalized = transform_norm(image)
         return img_normalized
@@ -583,7 +583,8 @@ def make_logging_dir(logdir):
 def get_train_and_val_dataloader(cfg):
     transform = transforms.Compose([
         transforms.Resize((256, 256)),
-        transforms.RandomResizedCrop(256),
+        # transforms.RandomResizedCrop(256),
+        transforms.RandomResizedCrop(256, scale=(0.8, 1.0), ratio=(0.95, 1.05)),
         # transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
