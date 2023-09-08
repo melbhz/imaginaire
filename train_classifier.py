@@ -708,7 +708,7 @@ def main(redirect_stdout=False):
 
     # Initialize data loaders and models.
     cfg.data.train.batch_size = cfg.data.train.batch_size * args.batch_size_multiplier
-    train_loader, val_loader = get_train_and_val_dataloader(cfg, cfg.transform_v2)
+    train_loader, val_loader = get_train_and_val_dataloader(cfg, arg.transform_v2)
 
     model = Net()
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
