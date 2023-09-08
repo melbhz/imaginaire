@@ -886,4 +886,4 @@ class MultiModelTester():
 
 
 if __name__ == "__main__":
-    main(redirect_stdout=True)
+    main(redirect_stdout=False)
