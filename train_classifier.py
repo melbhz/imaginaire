@@ -580,7 +580,7 @@ def make_logging_dir(logdir):
     # set_summary_writer(tensorboard_dir)
 
 
-def get_train_and_val_dataloader(cfg):
+def get_train_and_val_dataloader(cfg, transform_v2=False):
     transform = transforms.Compose([
         transforms.Resize((256, 256)),
         # transforms.RandomResizedCrop(256),
@@ -589,6 +589,18 @@ def get_train_and_val_dataloader(cfg):
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
+
+    if transform_v2:
+        transform = transforms.Compose([
+            transforms.Resize((256, 256)),
+            transforms.RandomResizedCrop(256, scale=(0.8, 1.0), ratio=(0.95, 1.05)),
+            transforms.GaussianBlur(kernel_size=(5, 5), sigma=(0.1, 2.0)),
+            transforms.RandomAdjustSharpness(sharpness_factor=5),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.05),
+            # transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
 
     train_dir = cfg.data.train.roots[0]
     val_dir = cfg.data.val.roots[0]
@@ -669,6 +681,11 @@ def parse_args():
     parser.add_argument('--redirect_stdout', action='store_true')
     ##-------------------------------------------------------------##
 
+    # <- for advanced transform, adding blurrer, sharpness_adjuster and color_jitter, and
+    # set scale=(0.8, 1.0), ratio=(0.95, 1.05) for transforms.RandomResizedCrop
+    parser.add_argument('--transform_v2', action='store_true')
+    # ->
+
     args = parser.parse_args()
     return args
 
@@ -691,7 +708,7 @@ def main(redirect_stdout=False):
 
     # Initialize data loaders and models.
     cfg.data.train.batch_size = cfg.data.train.batch_size * args.batch_size_multiplier
-    train_loader, val_loader = get_train_and_val_dataloader(cfg)
+    train_loader, val_loader = get_train_and_val_dataloader(cfg, cfg.transform_v2)
 
     model = Net()
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
