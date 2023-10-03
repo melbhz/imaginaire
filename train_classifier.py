@@ -686,12 +686,22 @@ def parse_args():
     parser.add_argument('--transform_v2', action='store_true')
     # ->
 
+    parser.add_argument('--print_model_only', action='store_true')
+
     args = parser.parse_args()
     return args
 
 
 def main(redirect_stdout=False):
     args = parse_args()
+    if args.print_model_only:
+        model = Net()
+        model.print_architecture()
+        import torchsummary
+        # You need to define input size to calcualte parameters
+        torchsummary.summary(model, input_size=(3, 256, 256))
+        return
+
     if args.multi_model_inference:
         main_inference(args, redirect_stdout=args.redirect_stdout)
         return
