@@ -4,8 +4,8 @@
 # To view a copy of this license, check out LICENSE.md
 
 all:
-	python setup.py build_ext --inplace --user
-	python setup.py install --user
+	python setup.py build_ext --inplace
+	python setup.py install
 
 clean:
 	rm -rf *.o *.a *.so test build
