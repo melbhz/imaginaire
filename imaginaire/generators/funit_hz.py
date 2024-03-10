@@ -35,9 +35,11 @@ class Generator(nn.Module):
         style_b = self.generator.style_encoder(data['images_style'])
         images_trans = self.generator.decode(content_a, style_b)
         images_recon = self.generator.decode(content_a, style_a)
+        ##-- images_score = self.generator.style_encoder(data['images_content'])
 
         net_G_output = dict(images_trans=images_trans,
-                            images_recon=images_recon)
+                            images_recon=images_recon,
+                            images_score=(style_a, style_b))
         return net_G_output
 
     def inference(self, data, keep_original_size=True):
@@ -87,7 +89,7 @@ class FUNITTranslator(nn.Module):
     def __init__(self,
                  num_filters=64,
                  num_filters_mlp=256,
-                 style_dims=64,
+                 style_dims=8, #64,
                  num_res_blocks=2,
                  num_mlp_blocks=3,
                  num_downsamples_style=4,

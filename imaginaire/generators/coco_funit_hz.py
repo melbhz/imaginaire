@@ -5,7 +5,7 @@
 import torch
 from torch import nn
 
-from imaginaire.generators.funit import (MLP, ContentEncoder, Decoder,
+from imaginaire.generators.funit_hz import (MLP, ContentEncoder, Decoder,
                                          StyleEncoder)
 
 

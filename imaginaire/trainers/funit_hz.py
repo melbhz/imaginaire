@@ -52,6 +52,7 @@ class Trainer(BaseTrainer):
         self.criteria['gan'] = GANLoss(cfg.trainer.gan_mode)
         self.criteria['image_recon'] = nn.L1Loss()
         self.criteria['feature_matching'] = nn.L1Loss()
+        self.criteria['score_recon'] = nn.L1Loss()
 
         for loss_name, loss_weight in cfg.trainer.loss_weight.__dict__.items():
             if loss_weight > 0:
@@ -89,6 +90,12 @@ class Trainer(BaseTrainer):
             self.gen_losses['image_recon'] = \
                 self.criteria['image_recon'](net_G_output['images_recon'],
                                              data['images_content'])
+
+        # Score reconstruction loss
+        if 'score_recon' in self.weights:
+            self.gen_losses['score_recon'] = \
+                self.criteria['score_recon'](net_G_output['score_recon'],
+                                             data['images_content_score'])
 
         # Feature matching loss
         if 'feature_matching' in self.weights:
